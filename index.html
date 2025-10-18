@@ -185,6 +185,19 @@ Perf notes:
     .icon{width:18px;height:18px;display:inline-block}
     main{padding:18px;max-width:1320px;margin:0 auto calc(56px + env(safe-area-inset-bottom))}
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .filters-bar{padding:0;margin:0 0 16px;overflow:hidden}
+    .filters-bar summary{list-style:none;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;background:var(--ghost-bg);border-radius:16px}
+    .filters-bar summary:focus-visible{outline:2px solid var(--accent-3);outline-offset:2px}
+    .filters-bar summary::-webkit-details-marker{display:none}
+    .filters-bar summary::after{content:"";border:6px solid transparent;border-bottom-color:var(--muted);margin-left:auto;transition:transform .2s ease}
+    .filters-bar[open] summary{border-bottom:1px solid var(--border);border-radius:16px 16px 0 0}
+    .filters-bar[open] summary::after{transform:rotate(180deg)}
+    [data-theme="dark"] .filters-bar summary{background:var(--ghost-bg-dark)}
+    .filters-content{padding:14px;display:flex;flex-direction:column;gap:12px}
+    .filters-toolbar{display:flex;justify-content:flex-end}
+    .filters-toolbar button{margin-left:auto}
+    .filters-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+    @media(max-width:720px){.filters-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
     .grid{display:grid;gap:12px}
     .grid>*{min-width:0}
     .grid>.card,
@@ -417,20 +430,16 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       <div class="card kpi" role="group" aria-label="Average rating"><h3>Average Rating</h3><div class="value" id="kpiRating">0.00</div></div>
     </div>
     <div class="hr"></div>
-    <div class="two">
-      <div class="card">
-        <div class="row"><h3>Active Tasks</h3><div class="spacer"></div><div class="small">Overdue / In Progress / Completed</div></div>
-        <div class="table-wrap" role="region" aria-label="Dashboard tasks">
-          <table id="tblDashTasks"><thead><tr>
-            <th scope="col">Task</th><th scope="col">Event</th><th scope="col">Assigned</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col" class="no-print">Actions</th>
-          </tr></thead><tbody></tbody></table>
+    <details id="dashFilters" class="filters-bar card" open>
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-funnel"></use></svg>
+        <span class="filters-title">Filters</span>
+      </summary>
+      <div class="filters-content">
+        <div class="filters-toolbar">
+          <button class="ghost" id="btnClearFilters" data-testid="filters-clear" type="button" aria-label="Clear filters"><svg class="icon"><use href="#ic-funnel"></use></svg> Clear</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="row"><h3>Filters</h3><div class="spacer"></div>
-          <button class="ghost" id="btnClearFilters" data-testid="filters-clear" aria-label="Clear filters"><svg class="icon"><use href="#ic-funnel"></use></svg> Clear</button>
-        </div>
-        <div class="grid grid-2 gap-tight">
+        <div class="grid gap-tight filters-grid">
           <div><div class="small">Search</div><input id="fSearch" placeholder="Search event/task…" data-testid="filter-search" aria-label="Search"/></div>
           <div><div class="small">Event Type</div><select id="fType" data-testid="filter-type" aria-label="Filter by event type"><option value="">All</option><option>Wedding</option><option>Baptism</option><option>Party</option></select></div>
           <div><div class="small">Status</div><select id="fStatus" data-testid="filter-status" aria-label="Filter by event status"><option value="">All</option><option>Planning</option><option>Executing</option><option>Completed</option></select></div>
@@ -438,6 +447,14 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
           <div><div class="small">Date To</div><input id="fTo" type="date" data-testid="filter-to" aria-label="Date to"></div>
         </div>
         <div class="small muted">Pinned deadlines appear in Tasks & Dashboard when within 7 days.</div>
+      </div>
+    </details>
+    <div class="card">
+      <div class="row"><h3>Active Tasks</h3><div class="spacer"></div><div class="small">Overdue / In Progress / Completed</div></div>
+      <div class="table-wrap" role="region" aria-label="Dashboard tasks">
+        <table id="tblDashTasks"><thead><tr>
+          <th scope="col">Task</th><th scope="col">Event</th><th scope="col">Assigned</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col" class="no-print">Actions</th>
+        </tr></thead><tbody></tbody></table>
       </div>
     </div>
     <div class="hr"></div>
