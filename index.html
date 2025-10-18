@@ -27,7 +27,7 @@ Perf notes:
 <head>
   <meta charset="utf-8" />
   <title>Event Planner Pro — Single-file (Hash Routing, Offline, A11y)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <!-- Leaflet (maps allowed to use CDN) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -138,21 +138,24 @@ Perf notes:
 
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--overlay);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans";line-height:1.5;letter-spacing:.2px;padding-bottom:env(safe-area-inset-bottom);font-size:var(--font-base);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+    body{margin:0;background:var(--overlay);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans";line-height:1.6;letter-spacing:.2px;padding-bottom:calc(env(safe-area-inset-bottom) + 24px);font-size:var(--font-base);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;scrollbar-gutter:stable both-edges}
     :focus-visible{outline:2px solid var(--accent-3); box-shadow:var(--ring); border-radius:6px}
     a.skip{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
     a.skip:focus{left:8px;top:8px;width:auto;height:auto;background:#fff;color:#000;padding:8px 10px;border-radius:8px;z-index:1000}
     header{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);background:var(--glass);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;padding:calc(16px + env(safe-area-inset-top)) var(--safe-gap) 12px;min-height:var(--header-height)}
     header h1{margin:0;font-size:var(--font-title);font-weight:800;letter-spacing:.4px}
-    nav[role="navigation"]{display:flex;gap:8px;flex-wrap:wrap}
-    .tab-btn{background:#fff;color:var(--text);border:1px solid var(--border);padding:8px 12px;font-size:13px;border-radius:12px;cursor:pointer;box-shadow:0 1px 0 #00000010,inset 0 0 0 1px #ffffff66;transition:transform .06s,box-shadow .12s,border-color .12s,background .12s}
+    #primaryNav{display:flex;gap:8px;flex-wrap:wrap}
+    .tab-btn{background:#fff;color:var(--text);border:1px solid var(--border);padding:10px 14px;font-size:14px;font-weight:600;border-radius:12px;cursor:pointer;box-shadow:0 1px 0 #00000010,inset 0 0 0 1px #ffffff66;transition:transform .06s,box-shadow .12s,border-color .12s,background .12s;min-height:44px;min-width:140px;text-align:center}
     [data-theme="dark"] .tab-btn{background:#141c2b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.35)}
     .tab-btn:hover{border-color:var(--accent-3);box-shadow:0 4px 14px rgba(124,58,237,.2);transform:translateY(-1px)}
     .tab-btn[aria-current="page"]{background:var(--active-tab-bg);border-color:var(--accent)}
     [data-theme="dark"] .tab-btn[aria-current="page"]{background:var(--active-tab-bg-dark)}
-    .theme-toggle{display:inline-flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 12px;background:#fff;cursor:pointer}
+    .theme-toggle{display:inline-flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 12px;background:#fff;cursor:pointer;min-height:44px}
     [data-theme="dark"] .theme-toggle{background:#141c2b}
     .theme-toggle .label{font-size:12px;color:var(--muted)}
+    .menu-toggle{display:none;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:8px 14px;background:#fff;color:var(--text);box-shadow:0 1px 0 #00000010,inset 0 0 0 1px #ffffff66;font-size:14px;font-weight:600;cursor:pointer;min-height:44px}
+    .menu-toggle svg{width:18px;height:18px}
+    [data-theme="dark"] .menu-toggle{background:#141c2b}
 /* Accent color picker button */
 .color-chip{
   width:28px; height:28px; border-radius:999px;
@@ -190,6 +193,7 @@ Perf notes:
 }
 
     .icon{width:18px;height:18px;display:inline-block}
+    h2,h3{scroll-margin-top:calc(var(--header-height-mobile) + 16px)}
     main{padding:var(--safe-gap);max-width:1320px;margin:0 auto calc(56px + env(safe-area-inset-bottom))}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow)}
     .grid{display:grid;gap:12px}
@@ -227,7 +231,7 @@ Perf notes:
     .two>.card{display:flex;flex-direction:column;gap:12px}
     .two>.card .table-wrap{flex:1}
     @media(max-width:1100px){.two{grid-template-columns:1fr}}
-    input,select,textarea,button{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:var(--font-small);line-height:1.2;box-shadow:inset 0 0 0 1px #ffffffcc;min-height:44px}
+    input,select,textarea,button{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:clamp(16px,1.6vw,18px);line-height:1.3;box-shadow:inset 0 0 0 1px #ffffffcc;min-height:44px;touch-action:manipulation}
     input::placeholder,textarea::placeholder{color:var(--placeholder);opacity:.75}
     button{cursor:pointer;transition:transform .15s ease, box-shadow .2s ease}
     button:active{transform:scale(.98)}
@@ -242,6 +246,9 @@ Perf notes:
     button.link{background:transparent;border-color:transparent;text-decoration:underline;cursor:pointer;padding:4px 6px;border-radius:8px}
     .filters-panel{position:sticky;top:calc(var(--header-height) + 12px);z-index:24;backdrop-filter:blur(12px);background:var(--card);background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 18px 40px rgba(31,27,46,.12);display:flex;flex-direction:column;gap:14px;align-self:flex-start}
     .filters-panel .row{margin-bottom:2px}
+    .filter-toggle{display:none;font-size:14px;font-weight:600;padding:8px 12px;min-width:auto}
+    .filters-panel[data-collapsed="true"] #filtersGroup{display:none}
+    .filters-panel[data-collapsed="true"] .filter-hint{display:none}
     .filter-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
     .filter-field label{font-size:var(--font-small);font-weight:600;color:var(--muted);letter-spacing:.2px}
@@ -250,7 +257,7 @@ Perf notes:
     .chart-summary svg{width:14px;height:14px}
     .table-wrap{overflow:auto;border-radius:12px;border:1px solid var(--border);-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:clamp(12px,1.6vw,14px);vertical-align:top;line-height:1.4}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:clamp(13px,1.8vw,15px);vertical-align:top;line-height:1.45}
     th{text-align:left;color:var(--muted);background:var(--th-bg);position:sticky;top:0;z-index:1}
     [data-theme="dark"] th{background:var(--th-bg);color:var(--text)}
     tbody tr:nth-child(odd) td{background:var(--table-odd)}
@@ -324,9 +331,9 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
       header .scope select{width:100%}
       #accentBtn{order:4;margin-left:auto}
       #themeToggle{order:5}
-      nav[role="navigation"]{order:6;width:100%;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:4px -16px -8px;padding:0 16px 10px;scroll-snap-type:x proximity;scrollbar-width:none}
-      nav[role="navigation"]::-webkit-scrollbar{display:none}
-      nav[role="navigation"] .tab-btn{flex:0 0 auto;scroll-snap-align:start}
+      #primaryNav{order:6;width:100%;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:4px -16px -8px;padding:0 16px 10px;scroll-snap-type:x proximity;scrollbar-width:none}
+      #primaryNav::-webkit-scrollbar{display:none}
+      #primaryNav .tab-btn{flex:0 0 auto;scroll-snap-align:start}
     }
 
     @media(max-width:820px){
@@ -338,18 +345,27 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
     @media(max-width:720px){
       header{padding:calc(12px + env(safe-area-inset-top)) 16px 10px;min-height:var(--header-height-mobile)}
       header h1{font-size:clamp(18px,5vw,20px)}
+      #navToggle{display:inline-flex;order:2}
       main{padding:16px}
-      .filters-panel{top:calc(var(--header-height-mobile) + 12px);margin:0 -16px 12px;padding:16px 16px}
-      .tab-btn{padding:7px 10px;font-size:12px}
-      .theme-toggle{padding:6px 10px}
-      header .scope{order:4;flex-direction:column;align-items:flex-start}
-      #accentBtn{order:2}
-      #themeToggle{order:3;margin-left:0}
-      nav[role="navigation"]{order:5;margin:8px -14px -8px;padding:0 14px 10px;scroll-snap-type:x proximity;scrollbar-width:none}
+      .filters-panel{position:relative;top:auto;margin:0 -16px 12px;padding:16px 16px}
+      .theme-toggle{padding:6px 10px;order:3}
+      header .scope{order:4;flex-direction:column;align-items:flex-start;width:100%}
+      header .scope select{width:100%}
+      #accentBtn{order:5}
+      #themeToggle{order:6;margin-left:0}
+      #primaryNav{order:7;width:100%;flex-wrap:wrap;overflow:hidden;margin:4px 0 0;padding:0;max-height:0;opacity:0;transition:max-height .25s ease,opacity .25s ease}
+      #primaryNav .tab-btn{flex:1 1 100%;min-width:0}
+      body.nav-open #primaryNav{padding:6px 0 4px;max-height:520px;opacity:1;border-top:1px solid var(--border)}
+      body.nav-open header{border-bottom-color:transparent;box-shadow:0 12px 36px rgba(31,27,46,.18)}
+      #filtersToggle{display:inline-flex}
       .filter-fields{display:flex;overflow-x:auto;gap:12px;padding-bottom:6px;margin:0 -4px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
       .filter-fields::-webkit-scrollbar{display:none}
       .filter-field{flex:0 0 220px;scroll-snap-align:start}
       .grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr}
+    }
+
+    @media(min-width:721px){
+      #primaryNav{max-height:none !important;opacity:1 !important;padding:0}
     }
 
     @media(max-width:600px){
@@ -390,6 +406,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
 <svg width="0" height="0" style="position:absolute;left:-9999px;overflow:hidden" aria-hidden="true" focusable="false">
   <symbol id="ic-sun" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.8 1.8-1.8zm10.48 0l1.8-1.79 1.79 1.79-1.79 1.8-1.8-1.8zM12 4V1h-0v3h0zm0 19v-3h0v3h0zM4 12H1v0h3v0zm19 0h-3v0h3v0zM6.76 19.16l-1.8 1.79-1.79-1.79 1.79-1.8 1.8 1.8zm10.48 0l1.8 1.79 1.79-1.79-1.79-1.8-1.8 1.8zM12 7a5 5 0 100 10 5 5 0 000-10z"/></symbol>
   <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M12.74 2a9 9 0 109.26 11.45A7.5 7.5 0 0112.74 2z"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></symbol>
   <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></symbol>
   <symbol id="ic-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
   <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2z"/></symbol>
@@ -410,7 +427,11 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
   <input id="globalSearch" placeholder="Search events…" aria-label="Search events (global)" autocomplete="off" />
   <div id="globalSearchList" role="listbox" style="display:none"></div>
 </div>
-  <nav role="navigation" aria-label="Primary">
+  <button id="navToggle" class="menu-toggle no-print" type="button" aria-expanded="false" aria-controls="primaryNav">
+    <svg class="icon" aria-hidden="true"><use href="#ic-menu"></use></svg>
+    <span>Menu</span>
+  </button>
+  <nav id="primaryNav" role="navigation" aria-label="Primary">
     <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
     <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
     <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
@@ -482,9 +503,10 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       </div>
       <div class="card filters-panel" role="region" aria-labelledby="h-filters">
         <div class="row"><h3 id="h-filters">Filters</h3><div class="spacer"></div>
+          <button id="filtersToggle" class="ghost filter-toggle" type="button" aria-expanded="true" aria-controls="filtersGroup">Hide filters</button>
           <button class="ghost" id="btnClearFilters" data-testid="filters-clear" aria-label="Clear filters"><svg class="icon"><use href="#ic-funnel"></use></svg> Clear</button>
         </div>
-        <div class="filter-fields" role="group" aria-labelledby="h-filters">
+        <div id="filtersGroup" class="filter-fields" role="group" aria-labelledby="h-filters">
           <div class="filter-field"><label for="fSearch">Search</label><input id="fSearch" placeholder="Search event/task…" data-testid="filter-search" aria-label="Search"/></div>
           <div class="filter-field"><label for="fType">Event Type</label><select id="fType" data-testid="filter-type" aria-label="Filter by event type"><option value="">All</option><option>Wedding</option><option>Baptism</option><option>Party</option></select></div>
           <div class="filter-field"><label for="fStatus">Status</label><select id="fStatus" data-testid="filter-status" aria-label="Filter by event status"><option value="">All</option><option>Planning</option><option>Executing</option><option>Completed</option></select></div>
@@ -811,11 +833,99 @@ function applyTheme(theme){const t=(theme==="dark")?"dark":"light"; document.doc
 qs("#themeToggle").addEventListener("click",()=>applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
 /* ---------- Viewport helpers ---------- */
 const MOBILE_QUERY=window.matchMedia("(max-width: 768px)");
+const PHONE_QUERY=window.matchMedia("(max-width: 720px)");
+const navToggle=qs("#navToggle");
+const primaryNav=qs("#primaryNav");
+const filtersPanel=qs(".filters-panel");
+const filtersToggle=qs("#filtersToggle");
+const filtersGroup=qs("#filtersGroup");
+
+function closePrimaryNav(){
+  document.body.classList.remove("nav-open");
+  if(navToggle){navToggle.setAttribute("aria-expanded","false");}
+  if(primaryNav){
+    const hideForPhone=PHONE_QUERY.matches;
+    primaryNav.setAttribute("aria-hidden", hideForPhone?"true":"false");
+  }
+}
+
+function syncNavForViewport(){
+  if(!navToggle||!primaryNav) return;
+  if(!PHONE_QUERY.matches){
+    closePrimaryNav();
+    primaryNav.setAttribute("aria-hidden","false");
+  }else{
+    primaryNav.setAttribute("aria-hidden", document.body.classList.contains("nav-open")?"false":"true");
+  }
+}
+
+if(navToggle && primaryNav){
+  navToggle.addEventListener("click",evt=>{
+    const isOpen=navToggle.getAttribute("aria-expanded")==="true";
+    if(isOpen){closePrimaryNav();}
+    else{
+      document.body.classList.add("nav-open");
+      navToggle.setAttribute("aria-expanded","true");
+      primaryNav?.setAttribute("aria-hidden","false");
+      if(evt && evt.detail===0){
+        setTimeout(()=>primaryNav.querySelector(".tab-btn")?.focus(),0);
+      }
+    }
+  });
+  primaryNav.addEventListener("click",evt=>{
+    if(evt.target.closest && evt.target.closest(".tab-btn")){closePrimaryNav();}
+  });
+}
+
+document.addEventListener("keyup",evt=>{
+  if(evt.key==="Escape"){closePrimaryNav();}
+});
+
+function setFiltersCollapsed(collapsed){
+  if(!filtersPanel) return;
+  const wasCollapsed=filtersPanel.dataset.collapsed!=="false";
+  filtersPanel.dataset.collapsed=collapsed?"true":"false";
+  if(filtersGroup){
+    filtersGroup.hidden=collapsed;
+    filtersGroup.setAttribute("aria-hidden",String(collapsed));
+  }
+  if(filtersToggle){
+    filtersToggle.setAttribute("aria-expanded",String(!collapsed));
+    filtersToggle.textContent=collapsed?"Show filters":"Hide filters";
+  }
+  if(!collapsed && PHONE_QUERY.matches && wasCollapsed){
+    filtersPanel.scrollIntoView({block:"start",behavior:"smooth"});
+  }
+}
+
+function syncFiltersForViewport(){
+  if(!filtersPanel) return;
+  if(PHONE_QUERY.matches){
+    setFiltersCollapsed(true);
+  }else{
+    setFiltersCollapsed(false);
+  }
+}
+
+if(filtersToggle){
+  filtersToggle.addEventListener("click",()=>{
+    const collapsed=filtersPanel?.dataset.collapsed==="true";
+    setFiltersCollapsed(!collapsed);
+  });
+}
+
 const reflectViewportMode=()=>{
   document.documentElement.classList.toggle("is-mobile", MOBILE_QUERY.matches);
+  syncNavForViewport();
+  syncFiltersForViewport();
 };
 reflectViewportMode();
-if(typeof MOBILE_QUERY.addEventListener==="function"){MOBILE_QUERY.addEventListener("change", reflectViewportMode);}else if(typeof MOBILE_QUERY.addListener==="function"){MOBILE_QUERY.addListener(reflectViewportMode);}
+const listen=(mq,fn)=>{
+  if(!mq) return;
+  if(typeof mq.addEventListener==="function"){mq.addEventListener("change",fn);}else if(typeof mq.addListener==="function"){mq.addListener(fn);} 
+};
+listen(MOBILE_QUERY,reflectViewportMode);
+listen(PHONE_QUERY,()=>{syncNavForViewport();syncFiltersForViewport();});
 /* ---------- Accent Color (Picker) ---------- */
 const ACCENT_KEY = "epp_accent";
 
@@ -1095,6 +1205,7 @@ const ROUTES=["#/dashboard","#/events","#/timeline","#/vendors","#/budget","#/ta
 function navigate(hash){
   const h=ROUTES.includes(hash)?hash:"#/dashboard";
   if(location.hash!==h) location.hash=h;
+  closePrimaryNav();
 
   // show active view
   qsa(".tab").forEach(el=>el.hidden=true);
