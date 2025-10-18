@@ -186,6 +186,9 @@ Perf notes:
     main{padding:18px;max-width:1320px;margin:0 auto calc(56px + env(safe-area-inset-bottom))}
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
     .grid{display:grid;gap:12px}
+    .grid>*{min-width:0}
+    .grid>.card,
+    .grid>form{width:100%}
     .grid-1{grid-template-columns:1fr}
     .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -194,11 +197,22 @@ Perf notes:
     .gap-tight{gap:8px}
     .grid.kpi{grid-template-columns:repeat(4,minmax(0,1fr))}
     @media(max-width:1000px){.grid.kpi{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:620px){.grid.kpi{grid-template-columns:1fr}}
+    @media(max-width:620px){
+      #dashboard .grid.kpi{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:0}
+      #dashboard .grid.kpi .card{min-width:0}
+    }
+    #timeline .grid.grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+    #timeline .grid.grid-2>.card{display:flex;flex-direction:column}
+    #timeline .grid.grid-2>.card .table-wrap{flex:1}
+    #events form.grid-4,
+    #vendors form.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    #budget form.grid-5{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
     .card h3{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:700}
     .kpi .value{font-size:34px;font-weight:900;margin-top:6px;color:var(--accent-2);text-shadow:0 0 8px var(--glow)}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .spacer{flex:1}.two{display:grid;grid-template-columns:1.6fr 1.4fr;gap:12px}
+    .spacer{flex:1}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:stretch}
+    .two>.card{display:flex;flex-direction:column;gap:12px}
+    .two>.card .table-wrap{flex:1}
     @media(max-width:1100px){.two{grid-template-columns:1fr}}
     input,select,textarea,button{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:9px 12px;font-size:14px;box-shadow:inset 0 0 0 1px #ffffffcc}
     input::placeholder,textarea::placeholder{color:var(--placeholder);opacity:.75}
@@ -312,6 +326,24 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
       header .scope{gap:6px}
     }
 
+    html.is-mobile main{padding:12px}
+    html.is-mobile header{padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+    html.is-mobile .tab.card{padding:12px}
+    html.is-mobile #dashboard .grid.kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    html.is-mobile #dashboard .grid.kpi .card{display:flex;align-items:center;gap:12px;text-align:left;min-height:76px}
+    html.is-mobile #dashboard .grid.kpi .card h3{margin:0;font-size:13px;flex:1 1 auto}
+    html.is-mobile #dashboard .grid.kpi .value{margin:0;font-size:clamp(24px,6vw,32px)}
+    html.is-mobile #dashboard .two{grid-template-columns:1fr}
+    html.is-mobile #dashboard .two>.card{gap:10px}
+    html.is-mobile #dashboard .card .grid.grid-2{grid-template-columns:1fr}
+    html.is-mobile #timeline .grid.grid-2{grid-template-columns:1fr}
+    html.is-mobile #vendors form.grid-4,
+    html.is-mobile #events form.grid-4,
+    html.is-mobile #budget form.grid-5{grid-template-columns:1fr}
+    html.is-mobile .table-wrap{overflow:auto}
+    html.is-mobile table{table-layout:auto}
+    html.is-mobile th,html.is-mobile td{padding:9px 12px;font-size:13px;white-space:nowrap;word-break:normal}
+    html.is-mobile th{position:static}
 
 header .scope{display:inline-flex; align-items:center; gap:8px}
 #leafletMap{ position: relative; } /* ensures empty overlay anchors correctly */
@@ -708,6 +740,13 @@ function reflectThemeUI(){const isDark=document.documentElement.getAttribute("da
 function applyTheme(theme){const t=(theme==="dark")?"dark":"light"; document.documentElement.setAttribute("data-theme",t); localStorage.setItem(THEME_KEY,t); reflectThemeUI()}
 (function(){const saved=localStorage.getItem(THEME_KEY); if(saved){applyTheme(saved)}else{const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches; applyTheme(prefersDark?"dark":"light")}})();
 qs("#themeToggle").addEventListener("click",()=>applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+/* ---------- Viewport helpers ---------- */
+const MOBILE_QUERY=window.matchMedia("(max-width: 768px)");
+const reflectViewportMode=()=>{
+  document.documentElement.classList.toggle("is-mobile", MOBILE_QUERY.matches);
+};
+reflectViewportMode();
+if(typeof MOBILE_QUERY.addEventListener==="function"){MOBILE_QUERY.addEventListener("change", reflectViewportMode);}else if(typeof MOBILE_QUERY.addListener==="function"){MOBILE_QUERY.addListener(reflectViewportMode);}
 /* ---------- Accent Color (Picker) ---------- */
 const ACCENT_KEY = "epp_accent";
 
