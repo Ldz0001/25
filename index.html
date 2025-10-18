@@ -51,6 +51,83 @@ Perf notes:
       --focus:#7c3aed55; --pill:#241d50; --popover:#1c1637; --popover-border:#4b3bb0;
       --kbd:#fff; --kbd-bg:#000;
     }
+   /* --- Dark mode readability pass (higher contrast) --- */
+[data-theme="dark"]{
+  /* Base surfaces */
+  --bg:#131126;
+  --overlay:
+    radial-gradient(900px 500px at -150px -200px,#a78bfa22,transparent 60%),
+    radial-gradient(1000px 600px at 120% -100px,#c4b5fd1a,transparent 60%),
+    #131126;
+
+  --panel:#191737;
+  --card:#1d1b3f;
+  --border:#6c68ba;
+  --text:#f8f7ff;
+  --muted:#e1defc;
+  --table-odd:#221f49;
+  --th-bg:#1f1c46;
+  --row-hover-dark:#262357;
+  --ghost-bg-dark:#1b1940;
+  --active-tab-bg-dark:#2a255f;
+  --popover:#1c1842;
+  --popover-border:#6c68ba;
+
+  --accent:#b9a7ff;
+  --accent-2:#8f73ff;
+  --accent-3:#d7ccff;
+  --focus:#8f73ff55;
+  --pill:#231f4b;
+  --shadow:0 8px 28px rgba(0,0,0,.55);
+  --glass:rgba(20,18,40,.75);
+}
+
+/* Make sure text inside tables/cards never looks "washed" */
+[data-theme="dark"] td,
+[data-theme="dark"] .card,
+[data-theme="dark"] .card p,
+[data-theme="dark"] .card li {
+  color: var(--text);
+}
+
+/* Headings in cards were too faint on dark */
+[data-theme="dark"] .card h3{ color: var(--muted); font-weight: 700 }
+
+/* Inputs/buttons: clearer edges and text */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] button{
+  background:#201d46;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Tabs: selected vs. rest more obvious */
+[data-theme="dark"] .tab-btn{
+  background:#1c1637;
+  border-color: var(--border);
+}
+[data-theme="dark"] .tab-btn[aria-current="page"]{
+  background: var(--active-tab-bg-dark);
+  border-color: var(--accent-2);
+}
+
+/* Table header & hover contrast */
+[data-theme="dark"] th{
+  background: var(--th-bg);
+  color: var(--muted);
+}
+[data-theme="dark"] tr:hover td{
+  background: var(--row-hover-dark);
+}
+
+/* KPI numbers stay punchy but readable on dark */
+[data-theme="dark"] .kpi .value{
+  color: var(--accent-2);
+  text-shadow: 0 0 10px var(--glow);
+}
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--overlay);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans";line-height:1.45;letter-spacing:.2px}
@@ -188,7 +265,7 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
   --active-tab-bg-dark:#251c4f;
   --ghost-bg-dark:#1a1530;
 }
-}
+
 
 header .scope{display:inline-flex; align-items:center; gap:8px}
 #leafletMap{ position: relative; } /* ensures empty overlay anchors correctly */
