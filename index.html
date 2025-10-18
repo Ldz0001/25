@@ -173,7 +173,7 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
 .search-item{padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); font-size:13px}
 .search-item:last-child{border-bottom:0}
 .search-item:hover{background:var(--row-hover)}
-[data-theme="dark"] .search-item:hover,[data-theme="dark"] .search-item.active{background:var(--row-hover-dark)
+[data-theme="dark"] .search-item:hover,[data-theme="dark"] .search-item.active{background:var(--row-hover-dark)}
 /* Palette fallbacks (will be overwritten by JS when you pick a color) */
 :root{
   --th-bg:#f5f0ff;
@@ -245,12 +245,6 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
     <input id="accentPicker" type="color" value="#7c3aed"
            class="color-hit-target" aria-label="Pick accent color">
   </button>
-  <button id="themeToggle" class="theme-toggle" title="Toggle theme" aria-pressed="false" data-testid="theme-toggle">
-    <svg class="icon" id="themeIcon" aria-hidden="true"><use href="#ic-sun"></use></svg>
-    <span id="themeLabel" class="label">Light</span>
-  </button>
-</header>
-
   <button id="themeToggle" class="theme-toggle" title="Toggle theme" aria-pressed="false" data-testid="theme-toggle">
     <svg class="icon" id="themeIcon" aria-hidden="true"><use href="#ic-sun"></use></svg>
     <span id="themeLabel" class="label">Light</span>
