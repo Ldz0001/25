@@ -153,6 +153,22 @@ Perf notes:
     .theme-toggle{display:inline-flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 12px;background:#fff;cursor:pointer}
     [data-theme="dark"] .theme-toggle{background:#141c2b}
     .theme-toggle .label{font-size:12px;color:var(--muted)}
+    .menu-toggle{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--card);
+      box-shadow:0 1px 0 #00000010,inset 0 0 0 1px #ffffff66;
+      cursor:pointer;
+    }
+    [data-theme="dark"] .menu-toggle{background:var(--card)}
+    .menu-toggle .icon{width:20px;height:20px}
+    .nav-drawer{display:flex;align-items:center}
+    .nav-overlay{display:none}
 /* Accent color picker button */
 .color-chip{
   width:28px; height:28px; border-radius:999px;
@@ -361,14 +377,32 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
       *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
     }
 
-    html.is-mobile main{padding:16px}
-    html.is-mobile header{padding:calc(12px + env(safe-area-inset-top)) 16px 10px;min-height:var(--header-height-mobile)}
-    html.is-mobile .tab.card{padding:16px}
-    html.is-mobile #dashboard .grid.kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    html.is-mobile #dashboard .grid.kpi .card{min-height:88px}
+    html.is-mobile main{padding:16px;margin-top:12px}
+    html.is-mobile header{padding:18px 18px 16px;min-height:var(--header-height-mobile);margin:12px 16px 0;border-radius:var(--radius-lg);background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);position:sticky;top:calc(env(safe-area-inset-top) + 8px);z-index:70;overflow:hidden}
+    html.is-mobile header::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:0 12px 30px rgba(31,27,46,.12);z-index:-1}
+    html.is-mobile header h1{font-size:clamp(18px,6vw,22px)}
+    html.is-mobile header{align-items:flex-start;gap:12px;flex-wrap:wrap}
+    html.is-mobile .menu-toggle{display:inline-flex;order:0}
+    html.is-mobile .nav-drawer{position:fixed;inset:0 auto 0 0;width:min(280px,80vw);padding:calc(16px + env(safe-area-inset-top)) 20px 24px;background:var(--card);border-right:1px solid var(--border);box-shadow:0 28px 60px rgba(31,27,46,.25);flex-direction:column;gap:16px;transform:translateX(-110%);transition:transform .22s ease;z-index:60;overflow-y:auto}
+    html.is-mobile .nav-drawer.open{transform:translateX(0)}
+    html.is-mobile nav[role="navigation"]{flex-direction:column;align-items:stretch;gap:12px;margin:0;padding:0}
+    html.is-mobile nav[role="navigation"] .tab-btn{flex:0 0 auto;font-size:15px;padding:12px 14px;text-align:left;border-radius:12px}
+    html.is-mobile .nav-overlay{display:block;position:fixed;inset:0;background:rgba(31,27,46,.45);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:55}
+    html.is-mobile .nav-overlay.show{opacity:1;pointer-events:auto}
+    html.is-mobile #accentBtn{order:2}
+    html.is-mobile #themeToggle{order:3;margin-left:0}
+    html.is-mobile .scope{order:4;flex-direction:column;align-items:flex-start}
+    html.is-mobile .search-wrap{order:5;width:100%}
+    html.is-mobile #primaryNavContainer{order:6}
+    html.is-mobile #dashboard .grid.kpi{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;margin:0 -8px 12px;scroll-snap-type:x proximity}
+    html.is-mobile #dashboard .grid.kpi::-webkit-scrollbar{display:none}
+    html.is-mobile #dashboard .grid.kpi .card{flex:0 0 calc(80% - 4px);min-width:240px;scroll-snap-align:center;min-height:110px}
     html.is-mobile #dashboard .grid.kpi .value{margin:0;font-size:clamp(24px,6vw,32px)}
-    html.is-mobile #dashboard .two{grid-template-columns:1fr}
+    html.is-mobile #dashboard .two{grid-template-columns:1fr;gap:12px}
     html.is-mobile #dashboard .two>.card{gap:10px}
+    html.is-mobile #dashboard > .card{margin-bottom:12px}
+    html.is-mobile #dashboard #tblDashTasks,
+    html.is-mobile #dashboard #tblDashEvents{min-width:560px}
     html.is-mobile #dashboard .card .grid.grid-2{grid-template-columns:1fr}
     html.is-mobile #timeline .grid.grid-2{grid-template-columns:1fr}
     html.is-mobile #vendors form.grid-4,
@@ -378,6 +412,7 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
     html.is-mobile table{table-layout:auto}
     html.is-mobile th,html.is-mobile td{padding:9px 12px;font-size:13px;white-space:nowrap;word-break:normal}
     html.is-mobile th{position:static}
+    html.menu-open body{overflow:hidden}
 
 header .scope{display:inline-flex; align-items:center; gap:8px}
 #leafletMap{ position: relative; } /* ensures empty overlay anchors correctly */
@@ -402,25 +437,31 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
   <symbol id="ic-save" viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 00-2 2v14l4-4h10a2 2 0 002-2V5a2 2 0 00-2-2zM7 7h8v2H7V7z"/></symbol>
   <symbol id="ic-calendar" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2zm13 8H4v10h16V10z"/></symbol>
   <symbol id="ic-map" viewBox="0 0 24 24"><path d="M15 4l-6 2-6-2v16l6 2 6-2 6 2V6l-6-2zM9 20l-4-1.33V5.33L9 6.67V20zm6 0l-4-1.33V6.67L15 5.33V20zm2-13.33l2 0.67v13.34l-2-0.67V6.67z"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></symbol>
 </svg>
 
 <header role="banner" aria-label="Application header">
+<button id="menuToggle" class="menu-toggle no-print" type="button" aria-label="Open navigation" aria-controls="primaryNav" aria-expanded="false">
+  <svg class="icon" aria-hidden="true"><use href="#ic-menu"></use></svg>
+</button>
 <h1 id="appTitle">Event Planner Pro</h1>
 <div class="search-wrap no-print" aria-label="Global event search">
   <input id="globalSearch" placeholder="Search events…" aria-label="Search events (global)" autocomplete="off" />
   <div id="globalSearchList" role="listbox" style="display:none"></div>
 </div>
-  <nav role="navigation" aria-label="Primary">
-    <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
-    <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
-    <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
-    <button class="tab-btn" data-testid="nav-timeline" data-route="#/timeline">Timeline</button>
-    <button class="tab-btn" data-testid="nav-vendors" data-route="#/vendors">Vendors</button>
-    <button class="tab-btn" data-testid="nav-budget" data-route="#/budget">Budget</button>
-    <button class="tab-btn" data-testid="nav-tasks" data-route="#/tasks">Tasks</button>
-    <button class="tab-btn" data-testid="nav-map" data-route="#/map" aria-controls="map">Map</button>
-    <button class="tab-btn" data-testid="nav-settings" data-route="#/settings">Settings</button>
-  </nav>
+  <div id="primaryNavContainer" class="nav-drawer no-print" data-state="closed">
+    <nav id="primaryNav" role="navigation" aria-label="Primary">
+      <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
+      <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
+      <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
+      <button class="tab-btn" data-testid="nav-timeline" data-route="#/timeline">Timeline</button>
+      <button class="tab-btn" data-testid="nav-vendors" data-route="#/vendors">Vendors</button>
+      <button class="tab-btn" data-testid="nav-budget" data-route="#/budget">Budget</button>
+      <button class="tab-btn" data-testid="nav-tasks" data-route="#/tasks">Tasks</button>
+      <button class="tab-btn" data-testid="nav-map" data-route="#/map" aria-controls="map">Map</button>
+      <button class="tab-btn" data-testid="nav-settings" data-route="#/settings">Settings</button>
+    </nav>
+  </div>
 <div class="scope no-print">
   <div class="small muted" aria-hidden="true">Scope</div>
   <select id="scopeEvent" title="Data scope (All vs specific event)">
@@ -439,6 +480,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
     <span id="themeLabel" class="label">Light</span>
   </button>
 </header>
+<div id="navOverlay" class="nav-overlay no-print" hidden></div>
 
 <main id="main" tabindex="-1">
   <!-- DASHBOARD -->
@@ -811,11 +853,52 @@ function applyTheme(theme){const t=(theme==="dark")?"dark":"light"; document.doc
 qs("#themeToggle").addEventListener("click",()=>applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
 /* ---------- Viewport helpers ---------- */
 const MOBILE_QUERY=window.matchMedia("(max-width: 768px)");
+const menuToggle=qs("#menuToggle");
+const navDrawer=qs("#primaryNavContainer");
+const navOverlay=qs("#navOverlay");
+function setNavState(open){
+  if(!navDrawer) return;
+  const isOpen=Boolean(open);
+  const isMobile=document.documentElement.classList.contains("is-mobile");
+  navDrawer.classList.toggle("open",isOpen);
+  navDrawer.setAttribute("data-state",isOpen?"open":"closed");
+  navDrawer.setAttribute("aria-hidden",isMobile && !isOpen?"true":"false");
+  document.documentElement.classList.toggle("menu-open",isOpen);
+  if(menuToggle){
+    menuToggle.setAttribute("aria-expanded",String(isOpen));
+    menuToggle.setAttribute("aria-label",isOpen?"Close navigation":"Open navigation");
+  }
+  if(navOverlay){
+    if(isOpen){
+      navOverlay.hidden=false;
+      requestAnimationFrame(()=>navOverlay.classList.add("show"));
+    }else{
+      navOverlay.classList.remove("show");
+      setTimeout(()=>{ if(!navOverlay.classList.contains("show")) navOverlay.hidden=true; },200);
+    }
+  }
+}
 const reflectViewportMode=()=>{
   document.documentElement.classList.toggle("is-mobile", MOBILE_QUERY.matches);
+  setNavState(false);
 };
 reflectViewportMode();
 if(typeof MOBILE_QUERY.addEventListener==="function"){MOBILE_QUERY.addEventListener("change", reflectViewportMode);}else if(typeof MOBILE_QUERY.addListener==="function"){MOBILE_QUERY.addListener(reflectViewportMode);}
+menuToggle?.addEventListener("click",()=>{
+  const open=!navDrawer?.classList.contains("open");
+  setNavState(open);
+});
+navOverlay?.addEventListener("click",()=>setNavState(false));
+document.addEventListener("keydown",evt=>{
+  if(evt.key==="Escape"&&navDrawer?.classList.contains("open")){
+    setNavState(false);
+  }
+});
+qsa('#primaryNav .tab-btn').forEach(btn=>btn.addEventListener("click",()=>{
+  if(document.documentElement.classList.contains("is-mobile")){
+    setNavState(false);
+  }
+}));
 /* ---------- Accent Color (Picker) ---------- */
 const ACCENT_KEY = "epp_accent";
 
