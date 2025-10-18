@@ -37,6 +37,11 @@ Perf notes:
       --bg:#F6F3FF; --overlay: radial-gradient(900px 500px at -150px -200px,#d8ccff55,transparent 60%), radial-gradient(1000px 600px at 120% -100px,#e9e2ff66,transparent 60%), #F6F3FF;
       --panel:#fff; --card:#FCFAFF; --border:#E4DDF8; --text:#1f1b2e; --muted:#524a79;
       --accent:#7c3aed; --accent-2:#5b21b6; --accent-3:#a78bfa;
+      --kpi-surface:#f0e8ff;
+      --kpi-border:#c7b4f3;
+      --kpi-heading:#433278;
+      --kpi-subtext:#56428f;
+      --kpi-value:#2c1b63;
       --success:#059669; --warning:#d97706; --danger:#dc2626;
       --table-odd:#F3EEFF; --shadow:0 8px 28px rgba(72,50,154,.08); --glass:rgba(255,255,255,.75);
       --focus:#7c3aed66; --pill:#efeaff; --popover:#fff; --popover-border:#dcd3fb;
@@ -68,6 +73,11 @@ Perf notes:
       --accent:#8b5cf6;
       --accent-2:#6366f1;
       --accent-3:#c4b5fd;
+      --kpi-surface:#1d2744;
+      --kpi-border:#414e74;
+      --kpi-heading:#d7d9ff;
+      --kpi-subtext:#b8bdfa;
+      --kpi-value:#f6f5ff;
       --focus:#6366f155;
       --pill:#1d2842;
       --shadow:0 8px 28px rgba(0,0,0,.6);
@@ -185,6 +195,24 @@ Perf notes:
     .icon{width:18px;height:18px;display:inline-block}
     main{padding:18px;max-width:1320px;margin:0 auto calc(56px + env(safe-area-inset-bottom))}
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    #dashboard .card.kpi{background:var(--kpi-surface);border-color:var(--kpi-border);display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px;box-shadow:0 12px 24px -16px var(--accent-2);text-align:left;transition:transform .12s ease,box-shadow .12s ease}
+    #dashboard .card.kpi:hover{transform:translateY(-2px);box-shadow:0 18px 32px -18px var(--accent-2)}
+    #dashboard .card.kpi h3{margin:0;font-size:13px;font-weight:700;color:var(--kpi-heading);letter-spacing:.2px;text-transform:uppercase}
+    #dashboard .card.kpi .value{font-size:36px;font-weight:900;margin:0;color:var(--kpi-value);text-shadow:0 0 12px var(--glow)}
+    #dashboard .card.kpi .kpi-sub{font-size:12px;color:var(--kpi-subtext);font-weight:600;letter-spacing:.1px}
+    .filters-bar{padding:0;margin:0 0 16px;overflow:hidden}
+    .filters-bar summary{list-style:none;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;background:var(--ghost-bg);border-radius:16px}
+    .filters-bar summary:focus-visible{outline:2px solid var(--accent-3);outline-offset:2px}
+    .filters-bar summary::-webkit-details-marker{display:none}
+    .filters-bar summary::after{content:"";border:6px solid transparent;border-bottom-color:var(--muted);margin-left:auto;transition:transform .2s ease}
+    .filters-bar[open] summary{border-bottom:1px solid var(--border);border-radius:16px 16px 0 0}
+    .filters-bar[open] summary::after{transform:rotate(180deg)}
+    [data-theme="dark"] .filters-bar summary{background:var(--ghost-bg-dark)}
+    .filters-content{padding:14px;display:flex;flex-direction:column;gap:12px}
+    .filters-toolbar{display:flex;justify-content:flex-end}
+    .filters-toolbar button{margin-left:auto}
+    .filters-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+    @media(max-width:720px){.filters-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
     .grid{display:grid;gap:12px}
     .grid>*{min-width:0}
     .grid>.card,
@@ -280,6 +308,11 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
   --active-tab-bg:#f0eaff;
   --ghost-bg:#f8f6ff;
   --glow:#7c3aed18; /* used by KPI glow */
+  --kpi-surface:#f0e8ff;
+  --kpi-border:#c7b4f3;
+  --kpi-heading:#433278;
+  --kpi-subtext:#56428f;
+  --kpi-value:#2c1b63;
 }
 [data-theme="dark"]{
   --th-bg:#162033;
@@ -287,6 +320,11 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
   --active-tab-bg-dark:#243454;
   --ghost-bg-dark:#131b2c;
   --glow:#6366f11c;
+  --kpi-surface:#1d2744;
+  --kpi-border:#414e74;
+  --kpi-heading:#d7d9ff;
+  --kpi-subtext:#b8bdfa;
+  --kpi-value:#f6f5ff;
 }
 
     @media(max-width:980px){
@@ -330,9 +368,9 @@ header .search-wrap{position:relative; max-width:360px; flex:1 1 300px}
     html.is-mobile header{padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
     html.is-mobile .tab.card{padding:12px}
     html.is-mobile #dashboard .grid.kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    html.is-mobile #dashboard .grid.kpi .card{display:flex;align-items:center;gap:12px;text-align:left;min-height:76px}
-    html.is-mobile #dashboard .grid.kpi .card h3{margin:0;font-size:13px;flex:1 1 auto}
-    html.is-mobile #dashboard .grid.kpi .value{margin:0;font-size:clamp(24px,6vw,32px)}
+    html.is-mobile #dashboard .grid.kpi .card{align-items:flex-start;gap:8px;min-height:88px;padding:16px}
+    html.is-mobile #dashboard .grid.kpi .card h3{font-size:12px}
+    html.is-mobile #dashboard .grid.kpi .value{font-size:clamp(26px,7vw,36px)}
     html.is-mobile #dashboard .two{grid-template-columns:1fr}
     html.is-mobile #dashboard .two>.card{gap:10px}
     html.is-mobile #dashboard .card .grid.grid-2{grid-template-columns:1fr}
@@ -411,26 +449,22 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
   <section id="dashboard" class="tab card" role="region" aria-labelledby="h-dashboard">
     <h2 id="h-dashboard" class="visually-hidden" style="position:absolute;left:-9999px">Dashboard</h2>
     <div class="grid kpi" aria-live="polite">
-      <div class="card kpi" role="group" aria-label="Upcoming events"><h3>Upcoming Events</h3><div class="value" id="kpiUpcoming">0</div></div>
-      <div class="card kpi" role="group" aria-label="Tasks completion"><h3>Tasks Completion %</h3><div class="value" id="kpiCompletion">0%</div></div>
-      <div class="card kpi" role="group" aria-label="Overdue tasks"><h3>Overdue Tasks</h3><div class="value" id="kpiOverdue">0</div></div>
-      <div class="card kpi" role="group" aria-label="Average rating"><h3>Average Rating</h3><div class="value" id="kpiRating">0.00</div></div>
+      <div class="card kpi" role="group" aria-label="Upcoming events"><h3>Upcoming Events</h3><div class="value" id="kpiUpcoming">0</div><div class="kpi-sub" id="kpiUpcomingDetail">No upcoming events</div></div>
+      <div class="card kpi" role="group" aria-label="Tasks completion"><h3>Tasks Completion %</h3><div class="value" id="kpiCompletion">0%</div><div class="kpi-sub" id="kpiCompletionDetail">No tasks yet</div></div>
+      <div class="card kpi" role="group" aria-label="Overdue tasks"><h3>Overdue Tasks</h3><div class="value" id="kpiOverdue">0</div><div class="kpi-sub" id="kpiOverdueDetail">All caught up</div></div>
+      <div class="card kpi" role="group" aria-label="Average rating"><h3>Average Rating</h3><div class="value" id="kpiRating">0.00</div><div class="kpi-sub" id="kpiRatingDetail">No ratings yet</div></div>
     </div>
     <div class="hr"></div>
-    <div class="two">
-      <div class="card">
-        <div class="row"><h3>Active Tasks</h3><div class="spacer"></div><div class="small">Overdue / In Progress / Completed</div></div>
-        <div class="table-wrap" role="region" aria-label="Dashboard tasks">
-          <table id="tblDashTasks"><thead><tr>
-            <th scope="col">Task</th><th scope="col">Event</th><th scope="col">Assigned</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col" class="no-print">Actions</th>
-          </tr></thead><tbody></tbody></table>
+    <details id="dashFilters" class="filters-bar card" open>
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-funnel"></use></svg>
+        <span class="filters-title">Filters</span>
+      </summary>
+      <div class="filters-content">
+        <div class="filters-toolbar">
+          <button class="ghost" id="btnClearFilters" data-testid="filters-clear" type="button" aria-label="Clear filters"><svg class="icon"><use href="#ic-funnel"></use></svg> Clear</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="row"><h3>Filters</h3><div class="spacer"></div>
-          <button class="ghost" id="btnClearFilters" data-testid="filters-clear" aria-label="Clear filters"><svg class="icon"><use href="#ic-funnel"></use></svg> Clear</button>
-        </div>
-        <div class="grid grid-2 gap-tight">
+        <div class="grid gap-tight filters-grid">
           <div><div class="small">Search</div><input id="fSearch" placeholder="Search event/task…" data-testid="filter-search" aria-label="Search"/></div>
           <div><div class="small">Event Type</div><select id="fType" data-testid="filter-type" aria-label="Filter by event type"><option value="">All</option><option>Wedding</option><option>Baptism</option><option>Party</option></select></div>
           <div><div class="small">Status</div><select id="fStatus" data-testid="filter-status" aria-label="Filter by event status"><option value="">All</option><option>Planning</option><option>Executing</option><option>Completed</option></select></div>
@@ -438,6 +472,14 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
           <div><div class="small">Date To</div><input id="fTo" type="date" data-testid="filter-to" aria-label="Date to"></div>
         </div>
         <div class="small muted">Pinned deadlines appear in Tasks & Dashboard when within 7 days.</div>
+      </div>
+    </details>
+    <div class="card">
+      <div class="row"><h3>Active Tasks</h3><div class="spacer"></div><div class="small">Overdue / In Progress / Completed</div></div>
+      <div class="table-wrap" role="region" aria-label="Dashboard tasks">
+        <table id="tblDashTasks"><thead><tr>
+          <th scope="col">Task</th><th scope="col">Event</th><th scope="col">Assigned</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col" class="no-print">Actions</th>
+        </tr></thead><tbody></tbody></table>
       </div>
     </div>
     <div class="hr"></div>
@@ -689,11 +731,17 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
     <h3>Points of Interest</h3>
     <div class="grid grid-4 gap-tight">
       <input id="pId" type="hidden">
-      <div><div class="small">Label</div><input id="pLabel" placeholder="e.g., Hotel A" data-testid="poi-label"/></div>
-      <div><div class="small">Lat</div><input id="pLat" type="number" step="any" data-testid="poi-lat"/></div>
-      <div><div class="small">Lon</div><input id="pLon" type="number" step="any" data-testid="poi-lon"/></div>
-      <div><div class="small">Type</div><select id="pType" data-testid="poi-type"><option>Hotel</option><option>Parking</option><option>Vendor</option><option>Other</option></select></div>
+      <div style="grid-column:1 / span 2;"><div class="small">Label*</div><input id="pLabel" placeholder="e.g., Hotel A" data-testid="poi-label"/></div>
+      <div style="grid-column:3 / span 2;"><div class="small">Type</div><select id="pType" data-testid="poi-type"><option>Hotel</option><option>Parking</option><option>Vendor</option><option>Other</option></select></div>
+      <div class="autocomplete-wrap" style="grid-column:1 / span 4;">
+        <div class="small">Address* (type to search)</div>
+        <input id="pAddress" placeholder="Start typing an address…" autocomplete="off" data-testid="poi-address" aria-autocomplete="list" aria-controls="poiAddrList" aria-expanded="false"/>
+        <div id="poiAddrList" class="autocomplete-list" role="listbox" style="display:none;"></div>
+      </div>
+      <div style="grid-column:1 / span 2;"><div class="small">Latitude</div><input id="pLat" type="number" step="any" placeholder="auto from address" data-testid="poi-lat"/></div>
+      <div style="grid-column:3 / span 2;"><div class="small">Longitude</div><input id="pLon" type="number" step="any" placeholder="auto from address" data-testid="poi-lon"/></div>
     </div>
+    <div class="small muted" style="margin-top:6px;">Address search by OpenStreetMap Nominatim. Select a suggestion to enable saving.</div>
     <div class="row" style="margin-top:10px;">
        <button class="success" id="btnAddPOI" data-testid="add-poi"><svg class="icon"><use href="#ic-plus"></use></svg> Add POI</button>
        <button class="ghost" id="btnClearPOI" data-testid="clear-poi"><svg class="icon"><use href="#ic-trash"></use></svg> Clear POIs</button>
@@ -857,6 +905,11 @@ function applyAccent(hex){
   const active_tab_bg = hslToHex(hsl.h, 62, 94);  // active nav tab
   const ghost_bg      = hslToHex(hsl.h, 35, 97);  // ghost buttons
   const glow          = withAlphaHex(light_accent, "18"); // KPI glow ~9%
+  const kpi_surface_light = mixHex(card_soft, light_accent2, 0.35);
+  const kpi_border_light  = mixHex(border_soft, light_accent2, 0.55);
+  const kpi_heading_light = mixHex("#433278", light_accent2, 0.35);
+  const kpi_subtext_light = mixHex("#56428f", light_accent3, 0.35);
+  const kpi_value_light   = mixHex("#2c1b63", light_accent2, 0.25);
 
   // Overlay (radials tinted by accent)
   const ov1 = withAlphaHex(light_accent, "55");
@@ -884,14 +937,17 @@ function applyAccent(hex){
     --active-tab-bg:${active_tab_bg};
     --ghost-bg:${ghost_bg};
     --glow:${glow};
+    --kpi-surface:${kpi_surface_light};
+    --kpi-border:${kpi_border_light};
+    --kpi-heading:${kpi_heading_light};
+    --kpi-subtext:${kpi_subtext_light};
+    --kpi-value:${kpi_value_light};
   }`;
 
   // Dark-side tones keep structure neutral but accent-aware
   const dark_accent  = hslToHex(hsl.h, Math.min(100,hsl.s), Math.min(85, hsl.l+6));
   const dark_accent2 = hslToHex(hsl.h, Math.min(100,hsl.s), Math.max(32,  (hsl.l+6)-14));
   const dark_accent3 = hslToHex(hsl.h, Math.min(100,hsl.s), Math.min(96,  (hsl.l+6)+14));
-  const dark_glow    = withAlphaHex(dark_accent,"22");
-
   const dov1 = withAlphaHex(dark_accent,  "20");
   const dov2 = withAlphaHex(dark_accent3, "18");
   const darkBase={
@@ -936,6 +992,12 @@ function applyAccent(hex){
   const dark_pill        = mixHex(darkBase.pill,    dark_accent3, tintWeights.pill);
   const dark_muted       = mixHex("#cbd5f5",        dark_accent3, 0.12);
   const dark_placeholder = mixHex("#94a3b8",       dark_accent2, 0.12);
+  const dark_glow        = withAlphaHex(dark_accent,"22");
+  const kpi_surface_dark = mixHex(dark_card, dark_accent2, 0.28);
+  const kpi_border_dark  = mixHex(dark_border, dark_accent, 0.5);
+  const kpi_heading_dark = mixHex("#d7d9ff", dark_accent3, 0.28);
+  const kpi_subtext_dark = mixHex("#b8bdfa", dark_accent3, 0.35);
+  const kpi_value_dark   = mixHex("#f6f5ff", dark_accent3, 0.2);
   const dark_overlay = `radial-gradient(900px 500px at -150px -200px,${dov1},transparent 60%),
                         radial-gradient(1000px 600px at 120% -100px,${dov2},transparent 60%), ${dark_bg}`;
   const glassRgb = hexToRgb(dark_bg);
@@ -963,6 +1025,11 @@ function applyAccent(hex){
     --popover-border:${dark_popover_b};
     --overlay:${dark_overlay};
     --glow:${dark_glow};
+    --kpi-surface:${kpi_surface_dark};
+    --kpi-border:${kpi_border_dark};
+    --kpi-heading:${kpi_heading_dark};
+    --kpi-subtext:${kpi_subtext_dark};
+    --kpi-value:${kpi_value_dark};
     --glass:${dark_glass};
     --muted:${dark_muted};
     --placeholder:${dark_placeholder};
@@ -1018,9 +1085,12 @@ applyTheme=function(theme){
 const state={
   filters:{ search:"", type:"", status:"", from:"", to:"", eventId:"" },
   currentRoute:"#/dashboard",
-  currentTab:"dashboard", 
-  addrPick:null
+  currentTab:"dashboard",
+  addrPick:null,
+  poiAddrPick:null
 };
+let eventAddrAuto=null;
+let poiAddrAuto=null;
 /* ---------- Router (hash) ---------- */
 const ROUTES=["#/dashboard","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
 function navigate(hash){
@@ -1087,8 +1157,8 @@ function seedDemo(){
     { id:uid("bud"), eventId:ev[2].id, cat:"Music", item:"DJ Package", qty:1, unit:8000, tax:0, forecast:8000, actual:0, notes:"" }
   ];
   const pois=[
-    { id:uid("poi"), label:"Hotel Centro", type:"Hotel", lat:19.434, lon:-99.14 },
-    { id:uid("poi"), label:"Parking P1", type:"Parking", lat:19.431, lon:-99.129 }
+    { id:uid("poi"), label:"Hotel Centro", type:"Hotel", lat:19.434, lon:-99.14, address:"Hotel Centro Histórico, Ciudad de México" },
+    { id:uid("poi"), label:"Parking P1", type:"Parking", lat:19.431, lon:-99.129, address:"Estacionamiento Pino Suárez, Ciudad de México" }
   ];
   store.data={events:ev,tasks,notes:[],timeline,vendors,budget,pois};
   store.save();
@@ -1149,27 +1219,58 @@ function eventHasEnded(ev, nowYMD=todayYMD()){
 
 function renderKPIs(){
   const elU=qs("#kpiUpcoming"), elC=qs("#kpiCompletion"), elO=qs("#kpiOverdue"), elR=qs("#kpiRating");
-  if(!(elU&&elC&&elO&&elR)) return;
+  const detailU=qs("#kpiUpcomingDetail"), detailC=qs("#kpiCompletionDetail"), detailO=qs("#kpiOverdueDetail"), detailR=qs("#kpiRatingDetail");
+  if(!(elU&&elC&&elO&&elR&&detailU&&detailC&&detailO&&detailR)) return;
   const today=todayYMD();
   const evs=filteredEvents();
   const eventIds=new Set(evs.map(e=>e.id));
   const tasks=(store.data.tasks||[]).filter(t=>eventIds.has(t.eventId));
   const notes=(store.data.notes||[]).filter(n=>eventIds.has(n.eventId));
-  const upcoming=evs.filter(e=>e.eventDate && !isBefore(e.eventDate, today)).length;
+  const upcomingList=evs.filter(e=>e.eventDate && !isBefore(e.eventDate, today)).sort((a,b)=>(a.eventDate||"").localeCompare(b.eventDate||""));
+  const upcoming=upcomingList.length;
   const totalTasks=tasks.length;
   const completed=tasks.filter(t=>t.status==="Completed").length;
-  const overdue=tasks.filter(t=>t.status!=="Completed" && t.dueDate && isBefore(t.dueDate, today)).length;
+  const overdueTasks=tasks.filter(t=>t.status!=="Completed" && t.dueDate && isBefore(t.dueDate, today)).sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
+  const overdue=overdueTasks.length;
   const completion=totalTasks ? Math.round((completed/totalTasks)*100) : 0;
-  const ratings = notes.map(n=>{
+  const ratingsData = notes.map(n=>{
     const ev=store.data.events.find(e=>e.id===n.eventId);
-    if(!eventHasEnded(ev,today)) return NaN;
-    const r=Number(n.rating); return Number.isFinite(r)?r:NaN;
-  }).filter(Number.isFinite);
+    if(!eventHasEnded(ev,today)) return null;
+    const r=Number(n.rating);
+    if(!Number.isFinite(r)) return null;
+    return {rating:r,eventId:n.eventId};
+  }).filter(Boolean);
+  const ratings = ratingsData.map(r=>r.rating);
+  const ratedEvents=new Set(ratingsData.map(r=>r.eventId));
   const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length) : 0;
   elU.textContent=String(upcoming);
   elC.textContent=`${completion}%`;
   elO.textContent=String(overdue);
   elR.textContent=avg.toFixed(2);
+  if(upcomingList.length){
+    const next=upcomingList[0];
+    const nextTitle=(next.title||"Untitled event").trim()||"Untitled event";
+    detailU.textContent=next.eventDate?`Next: ${nextTitle} • ${fmtDate(next.eventDate)}`:`Next: ${nextTitle}`;
+  }else{
+    detailU.textContent="No upcoming events";
+  }
+  if(totalTasks===0){
+    detailC.textContent="No tasks yet";
+  }else{
+    const remaining=totalTasks-completed;
+    detailC.textContent=remaining>0?`${completed} done · ${remaining} left`:`All ${totalTasks} done`;
+  }
+  if(overdueTasks.length){
+    const top=overdueTasks[0];
+    const ev=store.data.events.find(e=>e.id===top.eventId);
+    const owner=(top.assignedTo||"Unassigned").trim()||"Unassigned";
+    const eventTitle=ev?ev.title:"Unknown event";
+    const taskWords=(top.title||"Task").split(/\s+/).filter(Boolean).slice(0,2).join(" ") || "Task";
+    detailO.textContent=`${owner} • ${eventTitle} • ${taskWords}`;
+  }else{
+    detailO.textContent="All caught up";
+  }
+  detailR.textContent=ratedEvents.size?`Rated events: ${ratedEvents.size}`:"No ratings yet";
 }
 function fillEventScope(){
   const sel = qs("#scopeEvent"); if(!sel) return;
@@ -1273,7 +1374,7 @@ function resetEventForm(){
   if(qs("#eStatus")) qs("#eStatus").value="Planning";
   if(qs("#eDate")) qs("#eDate").value="";
   state.addrPick=null;
-  const list=qs("#addrList"); if(list){ list.style.display="none"; list.innerHTML="" }
+  if(eventAddrAuto && typeof eventAddrAuto.reset==="function"){ eventAddrAuto.reset(); }
 }
 function editEvent(id){
   const e=store.data.events.find(x=>x.id===id); if(!e) return;
@@ -1749,8 +1850,9 @@ function renderMap(){
   // POIs
   (store.data.pois||[]).forEach(p=>{
     if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)) return;
+    const addressLine = p.address ? `${p.address}<br>` : "";
     const m = L.circleMarker([p.lat,p.lon],{radius:7,weight:2}).addTo(_map)
-      .bindPopup(`<b>${p.label}</b><br>Type: ${p.type||"Other"}`);
+      .bindPopup(`<b>${p.label}</b><br>${addressLine}Type: ${p.type||"Other"}`);
     _poiMarkers.push(m);
   });
 
@@ -1787,58 +1889,259 @@ function renderMap(){
 }
 
 // POI actions
-qs("#btnAddPOI")?.addEventListener("click",()=>{
-  const p={ id:uid("poi"), label:qs("#pLabel")?.value.trim(), lat:toNumber(qs("#pLat")?.value), lon:toNumber(qs("#pLon")?.value), type:qs("#pType")?.value };
-  if(!p.label || !Number.isFinite(p.lat) || !Number.isFinite(p.lon)){ alert("Please fill label and valid coordinates"); return }
-  store.data.pois.push(p); store.save(); renderMap();
+function resetPOIForm(){
+  ["pId","pLabel","pLat","pLon","pAddress"].forEach(id=>{ const el=qs(`#${id}`); if(el) el.value=""; });
+  const type=qs("#pType"); if(type) type.selectedIndex=0;
+  state.poiAddrPick=null;
+  if(poiAddrAuto && typeof poiAddrAuto.reset==="function"){ poiAddrAuto.reset(); }
+}
+
+qs("#btnAddPOI")?.addEventListener("click", async ()=>{
+  const labelInput=qs("#pLabel");
+  const typeSel=qs("#pType");
+  const addressInput=qs("#pAddress");
+  const latInput=qs("#pLat");
+  const lonInput=qs("#pLon");
+
+  let label=(labelInput?.value||"").trim();
+  const type=typeSel?.value||"Other";
+  const address=(addressInput?.value||"").trim();
+  if(!address){
+    alert("Please enter an address and select a suggestion.");
+    return;
+  }
+
+  let pick=(state.poiAddrPick && state.poiAddrPick.display_name===address) ? state.poiAddrPick : null;
+  if(!pick){
+    pick = await resolveAddress(address);
+    if(pick){
+      if(addressInput) addressInput.value=pick.display_name;
+      if(latInput) latInput.value=pick.lat;
+      if(lonInput) lonInput.value=pick.lon;
+      state.poiAddrPick=pick;
+    }
+  }
+
+  if(!pick){
+    alert("Please select an address from suggestions (or type a full address and try again).");
+    return;
+  }
+
+  const finalLat=Number(pick.lat);
+  const finalLon=Number(pick.lon);
+  if(latInput) latInput.value=finalLat;
+  if(lonInput) lonInput.value=finalLon;
+
+  if(!Number.isFinite(finalLat) || !Number.isFinite(finalLon)){
+    alert("Please provide valid coordinates.");
+    return;
+  }
+
+  if(!label){
+    label = pick.display_name.split(",")[0] || pick.display_name;
+  }
+
+  if(!label){
+    alert("Please provide a label for the POI.");
+    return;
+  }
+
+  if(!store.data.pois) store.data.pois=[];
+  store.data.pois.push({
+    id:uid("poi"),
+    label,
+    type,
+    lat:finalLat,
+    lon:finalLon,
+    address: pick ? pick.display_name : (address || "")
+  });
+  store.save();
+  renderMap();
+  resetPOIForm();
 });
-qs("#btnClearPOI")?.addEventListener("click",()=>{ if(confirm("Remove all POIs?")){ store.data.pois=[]; store.save(); renderMap() } });
+qs("#btnClearPOI")?.addEventListener("click",()=>{
+  if(confirm("Remove all POIs?")){
+    store.data.pois=[];
+    store.save();
+    renderMap();
+    resetPOIForm();
+  }
+});
 
 /* ---------- Address Autocomplete (Nominatim) ---------- */
-let addrTimer=null; let addrActiveIndex=-1;
-function hideAddr(){ const list=qs("#addrList"); if(list){ list.style.display="none"; list.innerHTML=""; addrActiveIndex=-1; qs("#eAddress")?.setAttribute("aria-expanded","false"); } }
-function showAddr(){ const list=qs("#addrList"); if(list){ list.style.display="block"; qs("#eAddress")?.setAttribute("aria-expanded","true"); } }
-function debounced(fn,ms=350){ return (...args)=>{ clearTimeout(addrTimer); addrTimer=setTimeout(()=>fn(...args),ms) } }
-async function fetchSuggestions(q){
-  const list=qs("#addrList"); if(!list) return;
-  if(!q || q.length<3){ hideAddr(); return; }
-  const url=new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("format","jsonv2"); url.searchParams.set("addressdetails","1"); url.searchParams.set("limit","8"); url.searchParams.set("q",q);
-  // Mexico bounding box
-  url.searchParams.set("viewbox","-118.6,32.8,-86.5,14.3"); url.searchParams.set("bounded","1");
-const res=await fetch(url,{headers:{Accept:"application/json"}});
-  if(!res.ok){ hideAddr(); return; }
-  const json=await res.json(); renderSuggestions(json);
-}
-function renderSuggestions(list){
-  const ul=qs("#addrList"); if(!ul) return;
-  if(!Array.isArray(list)||list.length===0){ hideAddr(); return; }
-  ul.innerHTML="";
-  list.forEach((item,idx)=>{
-    const div=document.createElement("div");
-    div.className="autocomplete-item"+(idx===0?" active":"");
-    div.setAttribute("role","option");
-    div.dataset.lat=item.lat; div.dataset.lon=item.lon; div.dataset.display=item.display_name;
-    div.innerHTML=`<svg class="icon" aria-hidden="true"><use href="#ic-pin"></use></svg> ${item.display_name}`;
-    div.addEventListener("click",()=>selectSuggestion(div));
-    ul.appendChild(div);
+function setupAddressAutocomplete({inputId,listId,onInput,onSelect}){
+  const input=qs(inputId);
+  const list=qs(listId);
+  if(!input || !list) return null;
+
+  let timer=null;
+  let activeIndex=-1;
+
+  const hide=()=>{
+    list.style.display="none";
+    list.innerHTML="";
+    activeIndex=-1;
+    input.setAttribute("aria-expanded","false");
+  };
+
+  const show=()=>{
+    if(list.childElementCount>0){
+      list.style.display="block";
+      input.setAttribute("aria-expanded","true");
+    }
+  };
+
+  const updateActive=(items)=>{
+    items.forEach((node,idx)=>{
+      if(idx===activeIndex){
+        node.classList.add("active");
+        node.setAttribute("aria-selected","true");
+      }else{
+        node.classList.remove("active");
+        node.setAttribute("aria-selected","false");
+      }
+    });
+  };
+
+  const selectNode=(node)=>{
+    if(!node) return;
+    const payload={
+      display_name:node.dataset.display||"",
+      lat:Number(node.dataset.lat),
+      lon:Number(node.dataset.lon)
+    };
+    onSelect?.(payload);
+    hide();
+  };
+
+  const render=(suggestions)=>{
+    if(!Array.isArray(suggestions) || suggestions.length===0){
+      hide();
+      return;
+    }
+    list.innerHTML="";
+    suggestions.forEach((item,idx)=>{
+      const div=document.createElement("div");
+      div.className="autocomplete-item"+(idx===0?" active":"");
+      div.setAttribute("role","option");
+      div.setAttribute("aria-selected", idx===0?"true":"false");
+      div.dataset.lat=item.lat;
+      div.dataset.lon=item.lon;
+      div.dataset.display=item.display_name;
+      div.innerHTML=`<svg class="icon" aria-hidden="true"><use href="#ic-pin"></use></svg> ${item.display_name}`;
+      div.addEventListener("click",()=>selectNode(div));
+      list.appendChild(div);
+    });
+    activeIndex=0;
+    show();
+  };
+
+  const fetchSuggestions=async (q)=>{
+    if(!q || q.length<3){
+      hide();
+      return;
+    }
+    const url=new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format","jsonv2");
+    url.searchParams.set("addressdetails","1");
+    url.searchParams.set("limit","8");
+    url.searchParams.set("q",q);
+    url.searchParams.set("viewbox","-118.6,32.8,-86.5,14.3");
+    url.searchParams.set("bounded","1");
+    try{
+      const res=await fetch(url,{headers:{Accept:"application/json"}});
+      if(!res.ok){ hide(); return; }
+      const json=await res.json();
+      render(json);
+    }catch(_){
+      hide();
+    }
+  };
+
+  const debounced=(value)=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>fetchSuggestions(value),350);
+  };
+
+  input.addEventListener("input", e=>{
+    onInput?.(e);
+    debounced(e.target.value.trim());
   });
-  addrActiveIndex=0; showAddr();
+
+  input.addEventListener("focus", ()=>{
+    if(list.childElementCount>0){
+      show();
+    }
+  });
+
+  input.addEventListener("keydown", e=>{
+    const items=Array.from(list.children);
+    if(!items.length) return;
+    if(e.key==="ArrowDown"){
+      e.preventDefault();
+      activeIndex=clamp(activeIndex+1,0,items.length-1);
+      updateActive(items);
+      items[activeIndex].scrollIntoView({block:"nearest"});
+    }else if(e.key==="ArrowUp"){
+      e.preventDefault();
+      activeIndex=clamp(activeIndex-1,0,items.length-1);
+      updateActive(items);
+      items[activeIndex].scrollIntoView({block:"nearest"});
+    }else if(e.key==="Enter"){
+      e.preventDefault();
+      selectNode(items[activeIndex]);
+    }else if(e.key==="Escape"){
+      hide();
+    }
+  });
+
+  document.addEventListener("click", e=>{
+    if(e.target!==input && !list.contains(e.target)){
+      hide();
+    }
+  });
+
+  return {
+    reset:hide
+  };
 }
-function selectSuggestion(node){
-  const display=node.dataset.display; const lat=Number(node.dataset.lat); const lon=Number(node.dataset.lon);
-  qs("#eAddress").value=display; qs("#eLat").value=lat; qs("#eLon").value=lon;
-  state.addrPick={display_name:display,lat,lon}; hideAddr();
-}
-qs("#eAddress")?.addEventListener("input", debounced((e)=>{ state.addrPick=null; qs("#eLat").value=""; qs("#eLon").value=""; fetchSuggestions(e.target.value.trim()) },350));
-qs("#eAddress")?.addEventListener("focus", ()=>{ const list=qs("#addrList"); if(list && list.childElementCount>0) showAddr() });
-document.addEventListener("click",(e)=>{ const list=qs("#addrList"); const inp=qs("#eAddress"); if(list && !list.contains(e.target) && e.target!==inp) hideAddr() });
-qs("#eAddress")?.addEventListener("keydown",(e)=>{
-  const list=qs("#addrList"); if(!list) return;
-  const items=Array.from(list.children); if(!items.length) return;
-  if(e.key==="ArrowDown"){ e.preventDefault(); addrActiveIndex=clamp(addrActiveIndex+1,0,items.length-1); items.forEach(it=>it.classList.remove("active")); items[addrActiveIndex].classList.add("active"); items[addrActiveIndex].scrollIntoView({block:"nearest"}) }
-  if(e.key==="ArrowUp"){ e.preventDefault(); addrActiveIndex=clamp(addrActiveIndex-1,0,items.length-1); items.forEach(it=>it.classList.remove("active")); items[addrActiveIndex].classList.add("active"); items[addrActiveIndex].scrollIntoView({block:"nearest"}) }
-if(e.key==="Enter"){ e.preventDefault(); selectSuggestion(items[addrActiveIndex]) }
+
+eventAddrAuto=setupAddressAutocomplete({
+  inputId:"#eAddress",
+  listId:"#addrList",
+  onInput:()=>{
+    state.addrPick=null;
+    const lat=qs("#eLat"); if(lat) lat.value="";
+    const lon=qs("#eLon"); if(lon) lon.value="";
+  },
+  onSelect:(item)=>{
+    const addr=qs("#eAddress"); if(addr) addr.value=item.display_name;
+    const lat=qs("#eLat"); if(lat) lat.value=item.lat;
+    const lon=qs("#eLon"); if(lon) lon.value=item.lon;
+    state.addrPick=item;
+  }
+});
+
+poiAddrAuto=setupAddressAutocomplete({
+  inputId:"#pAddress",
+  listId:"#poiAddrList",
+  onInput:()=>{
+    state.poiAddrPick=null;
+    const lat=qs("#pLat"); if(lat) lat.value="";
+    const lon=qs("#pLon"); if(lon) lon.value="";
+  },
+  onSelect:(item)=>{
+    const addr=qs("#pAddress"); if(addr) addr.value=item.display_name;
+    const lat=qs("#pLat"); if(lat) lat.value=item.lat;
+    const lon=qs("#pLon"); if(lon) lon.value=item.lon;
+    if(!state.poiAddrPick){
+      const label=qs("#pLabel");
+      if(label && !label.value.trim()){
+        label.value=item.display_name.split(",")[0] || item.display_name;
+      }
+    }
+    state.poiAddrPick=item;
+  }
 });
 /* ---------- Global Search (Header Autocomplete) ---------- */
 let gTimer=null; let gActive=-1;
