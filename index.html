@@ -206,6 +206,36 @@ Perf notes:
     .meter-track{position:relative;height:10px;border-radius:999px;background:var(--border);overflow:hidden}
     .meter-fill{position:absolute;inset:0;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-3));border-radius:inherit;transition:width .3s ease}
     .event-card-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .calendar-card{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+    .calendar-header h3{margin:0;font-size:14px;font-weight:700;color:var(--muted)}
+    .calendar-header .muted{font-size:12px}
+    .calendar-wrap{max-height:none}
+    .calendar-grid{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden}
+    .calendar-grid th{text-align:center;font-weight:600;font-size:12px;color:var(--muted);background:var(--th-bg)}
+    .calendar-grid td{vertical-align:top;height:120px;padding:8px;border:1px solid var(--border);background:var(--card)}
+    .calendar-grid tr:first-child td{border-top:0}
+    .calendar-grid tr td:first-child{border-left:0}
+    .calendar-grid tr td:last-child{border-right:0}
+    .calendar-grid tr:last-child td{border-bottom:0}
+    .calendar-empty{background:transparent;border:0}
+    .calendar-day{display:flex;flex-direction:column;gap:6px;min-height:100px}
+    .calendar-day.is-today{border-radius:12px;box-shadow:0 0 0 2px var(--focus)}
+    .calendar-date{font-weight:700;font-size:13px;color:var(--muted)}
+    .calendar-events{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+    .calendar-events li{background:var(--pill);border:1px solid var(--border);border-radius:8px;padding:4px 6px;font-size:12px;color:var(--text);line-height:1.35}
+    .calendar-events li .cal-event-title{font-weight:600;display:block}
+    .calendar-events li .cal-event-meta{display:block;font-size:11px;color:var(--muted)}
+    .analysis-grid{margin:16px 0;gap:14px}
+    .analysis-card{display:flex;flex-direction:column;gap:10px}
+    .analysis-value{font-size:36px;font-weight:900;color:var(--accent-2)}
+    .analysis-breakdown{font-size:12px;color:var(--muted);line-height:1.45}
+    .analysis-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+    .analysis-list li{border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--card);display:flex;flex-direction:column;gap:4px}
+    .analysis-list li.analysis-empty{text-align:center;color:var(--muted);font-size:12px}
+    .analysis-date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+    .analysis-primary{font-weight:600;color:var(--text)}
+    .analysis-secondary{font-size:12px;color:var(--muted)}
+    #tblSeasonality tbody tr.is-target{background:var(--pill)}
     .event-card{border:1px solid var(--border);border-radius:16px;padding:18px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;min-height:220px;position:relative}
     .event-card.is-editing{gap:16px;padding:18px 18px 16px;border-color:var(--accent-2);box-shadow:0 12px 28px -18px var(--accent-2)}
     .event-card-header{display:flex;align-items:flex-start;gap:12px}
@@ -474,6 +504,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
 </div>
   <nav role="navigation" aria-label="Primary">
     <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
+    <button class="tab-btn" data-testid="nav-analysis" data-route="#/analysis">Analysis</button>
     <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
     <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
     <button class="tab-btn" data-testid="nav-timeline" data-route="#/timeline">Timeline</button>
@@ -547,6 +578,77 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       </div>
       <div id="kpiDetailBody" class="kpi-detail-body"></div>
     </div>
+    <div class="card calendar-card" role="region" aria-live="polite" aria-label="Calendar for current month">
+      <div class="row calendar-header">
+        <h3>Monthly Calendar</h3>
+        <div class="spacer"></div>
+        <div class="small muted" id="calendarMonthLabel"></div>
+      </div>
+      <div class="table-wrap calendar-wrap">
+        <table class="calendar-grid">
+          <thead>
+            <tr>
+              <th scope="col">Sun</th>
+              <th scope="col">Mon</th>
+              <th scope="col">Tue</th>
+              <th scope="col">Wed</th>
+              <th scope="col">Thu</th>
+              <th scope="col">Fri</th>
+              <th scope="col">Sat</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardCalendarBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section id="analysis" class="tab card" role="region" aria-labelledby="h-analysis" hidden>
+    <div class="row">
+      <h3 id="h-analysis">Analysis &amp; Forecast</h3>
+      <div class="spacer"></div>
+      <div class="small muted">Seasonal trends, projections, and upcoming schedules update automatically.</div>
+    </div>
+    <div class="grid grid-3 analysis-grid" aria-live="polite">
+      <article class="card analysis-card" role="group" aria-label="Projected events next month">
+        <h3>Projected Events Next Month</h3>
+        <div class="analysis-value" id="analysisProjectionValue">0</div>
+        <p class="analysis-breakdown" id="analysisProjectionDetail"></p>
+      </article>
+      <article class="card analysis-card" role="group" aria-labelledby="analysisNextMonthHeading">
+        <h3 id="analysisNextMonthHeading">Next Month Schedule</h3>
+        <ul class="analysis-list" id="analysisNextMonthList"></ul>
+      </article>
+      <article class="card analysis-card" role="group" aria-label="Seasonality overview">
+        <h3>Seasonality Overview</h3>
+        <div class="table-wrap small-table">
+          <table id="tblSeasonality">
+            <thead>
+              <tr><th scope="col">Month</th><th scope="col">Avg Past / Year</th><th scope="col">Scheduled</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+    <article class="card analysis-card" role="region" aria-label="Events in chronological order">
+      <h3>Events (Chronological)</h3>
+      <div class="table-wrap">
+        <table id="tblAnalysisEvents">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Event</th>
+              <th scope="col">Type</th>
+              <th scope="col">Status</th>
+              <th scope="col">Owner</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </article>
   </section>
 
   <!-- EVENTS -->
@@ -1165,7 +1267,7 @@ const state={
 let eventAddrAuto=null;
 let poiAddrAuto=null;
 /* ---------- Router (hash) ---------- */
-const ROUTES=["#/dashboard","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
+const ROUTES=["#/dashboard","#/analysis","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
 function navigate(hash){
   const h=ROUTES.includes(hash)?hash:"#/dashboard";
   if(location.hash!==h) location.hash=h;
@@ -1543,6 +1645,325 @@ function setupKpiInteractions(){
   });
 }
 setupKpiInteractions();
+
+function prepareEventsForAnalysis(events){
+  return (Array.isArray(events)?events:[])
+    .map(ev=>{
+      const date=parseYMD(ev.eventDate);
+      if(!date) return null;
+      date.setHours(0,0,0,0);
+      return { event:ev, date };
+    })
+    .filter(Boolean);
+}
+
+function computeSeasonalProjection(events, prepared){
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const list=Array.isArray(prepared)?prepared:prepareEventsForAnalysis(events);
+  const nextMonthStart=new Date(today.getFullYear(),today.getMonth()+1,1);
+  nextMonthStart.setHours(0,0,0,0);
+  const nextMonthEnd=new Date(today.getFullYear(),today.getMonth()+2,0);
+  nextMonthEnd.setHours(23,59,59,999);
+  const targetMonth=nextMonthStart.getMonth();
+
+  const pastEntries=list.filter(item=>item.date<nextMonthStart);
+  const scheduledEntries=list.filter(item=>item.date>=nextMonthStart && item.date<=nextMonthEnd);
+
+  const seasonalMap=new Map();
+  pastEntries.forEach(({date})=>{
+    if(date.getMonth()!==targetMonth) return;
+    const year=date.getFullYear();
+    seasonalMap.set(year,(seasonalMap.get(year)||0)+1);
+  });
+
+  let seasonalAvg=0;
+  if(seasonalMap.size){
+    const total=Array.from(seasonalMap.values()).reduce((a,b)=>a+b,0);
+    seasonalAvg=total/seasonalMap.size;
+  }else if(pastEntries.length){
+    const buckets=new Map();
+    pastEntries.forEach(({date})=>{
+      const key=`${date.getFullYear()}-${date.getMonth()}`;
+      buckets.set(key,(buckets.get(key)||0)+1);
+    });
+    if(buckets.size){
+      const total=Array.from(buckets.values()).reduce((a,b)=>a+b,0);
+      seasonalAvg=total/buckets.size;
+    }
+  }
+
+  const recentCounts=[];
+  for(let i=1;i<=3;i++){
+    const start=new Date(today.getFullYear(),today.getMonth()-i+1,1);
+    start.setHours(0,0,0,0);
+    const end=new Date(today.getFullYear(),today.getMonth()-i+2,0);
+    end.setHours(23,59,59,999);
+    const count=pastEntries.filter(({date})=>date>=start && date<=end).length;
+    recentCounts.push(count);
+  }
+  let recentAvg=0;
+  if(pastEntries.length){
+    recentAvg=recentCounts.reduce((a,b)=>a+b,0)/recentCounts.length;
+  }
+  if(!recentAvg && pastEntries.length){
+    const buckets=new Map();
+    pastEntries.forEach(({date})=>{
+      const key=`${date.getFullYear()}-${date.getMonth()}`;
+      buckets.set(key,(buckets.get(key)||0)+1);
+    });
+    if(buckets.size){
+      recentAvg=Array.from(buckets.values()).reduce((a,b)=>a+b,0)/buckets.size;
+    }
+  }
+
+  const scheduledCount=scheduledEntries.length;
+
+  if(!seasonalAvg && scheduledCount){
+    seasonalAvg=scheduledCount;
+  }
+  if(!recentAvg && scheduledCount){
+    recentAvg=scheduledCount;
+  }
+
+  const projectionRaw=(seasonalAvg*0.5)+(scheduledCount*0.3)+(recentAvg*0.2);
+  const projection=Math.max(Math.round(projectionRaw), scheduledCount);
+
+  return {
+    projection,
+    seasonalAvg,
+    recentAvg,
+    scheduledCount,
+    scheduledEvents:scheduledEntries.map(item=>item.event),
+    nextMonthLabel:nextMonthStart.toLocaleDateString(undefined,{month:'long',year:'numeric'}),
+    targetMonth
+  };
+}
+
+function renderAnalysis(){
+  const projectionEl=qs("#analysisProjectionValue");
+  if(!projectionEl) return;
+  const events=filteredEvents();
+  const prepared=prepareEventsForAnalysis(events);
+  const {projection,seasonalAvg,recentAvg,scheduledCount,scheduledEvents,nextMonthLabel,targetMonth}=computeSeasonalProjection(events,prepared);
+
+  projectionEl.textContent=String(projection);
+  const detail=qs("#analysisProjectionDetail");
+  if(detail){
+    const fmt=num=>Number.isFinite(num)?num.toFixed(1):"0.0";
+    detail.textContent=`${nextMonthLabel}: seasonal avg ${fmt(seasonalAvg)} • recent trend ${fmt(recentAvg)} • scheduled ${scheduledCount}. Weighted forecast (50% seasonal, 30% scheduled, 20% recent).`;
+  }
+
+  const heading=qs("#analysisNextMonthHeading");
+  if(heading){
+    heading.textContent=`Next Month Schedule — ${nextMonthLabel}`;
+  }
+
+  const listEl=qs("#analysisNextMonthList");
+  if(listEl){
+    listEl.innerHTML="";
+    const frag=fragment();
+    if(scheduledEvents.length){
+      const sorted=scheduledEvents.slice().sort((a,b)=>{
+        const da=parseYMD(a.eventDate);
+        const db=parseYMD(b.eventDate);
+        if(da && db && da.getTime()!==db.getTime()) return da.getTime()-db.getTime();
+        if(da && !db) return -1;
+        if(!da && db) return 1;
+        return (a.title||"").localeCompare(b.title||"");
+      });
+      sorted.forEach(ev=>{
+        const li=document.createElement("li");
+        const dateDiv=document.createElement("div");
+        dateDiv.className="analysis-date";
+        dateDiv.textContent=fmtDate(ev.eventDate)||"Date TBD";
+        const primary=document.createElement("div");
+        primary.className="analysis-primary";
+        primary.textContent=ev.title||"Untitled event";
+        const metaParts=[];
+        if(ev.eventType) metaParts.push(ev.eventType);
+        if(ev.status) metaParts.push(ev.status);
+        if(ev.owner) metaParts.push(`Owner: ${ev.owner}`);
+        li.appendChild(dateDiv);
+        li.appendChild(primary);
+        if(metaParts.length){
+          const secondary=document.createElement("div");
+          secondary.className="analysis-secondary";
+          secondary.textContent=metaParts.join(" • ");
+          li.appendChild(secondary);
+        }
+        frag.appendChild(li);
+      });
+    }else{
+      const li=document.createElement("li");
+      li.className="analysis-empty";
+      li.textContent=`No events scheduled for ${nextMonthLabel} yet.`;
+      frag.appendChild(li);
+    }
+    listEl.appendChild(frag);
+  }
+
+  const seasonBody=qs("#tblSeasonality tbody");
+  if(seasonBody){
+    seasonBody.innerHTML="";
+    const frag=fragment();
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const histMap=new Map();
+    const futureMap=new Map();
+    prepared.forEach(({date})=>{
+      const month=date.getMonth();
+      if(date<today){
+        let entry=histMap.get(month);
+        if(!entry){ entry={total:0,years:new Set()}; histMap.set(month,entry); }
+        entry.total+=1;
+        entry.years.add(date.getFullYear());
+      }else{
+        futureMap.set(month,(futureMap.get(month)||0)+1);
+      }
+    });
+    for(let m=0;m<12;m++){
+      const tr=document.createElement("tr");
+      if(m===targetMonth) tr.classList.add("is-target");
+      const monthName=new Date(2000,m,1).toLocaleString(undefined,{month:'short'});
+      const hist=histMap.get(m);
+      const avg=hist && hist.years.size ? hist.total/hist.years.size : 0;
+      const scheduled=futureMap.get(m)||0;
+      tr.innerHTML=`<td>${monthName}</td><td>${avg.toFixed(1)}</td><td>${scheduled}</td>`;
+      frag.appendChild(tr);
+    }
+    seasonBody.appendChild(frag);
+  }
+
+  const tableBody=qs("#tblAnalysisEvents tbody");
+  if(tableBody){
+    tableBody.innerHTML="";
+    const frag=fragment();
+    const chronological=prepared.slice().sort((a,b)=>a.date.getTime()-b.date.getTime());
+    chronological.forEach(({event})=>{
+      const statusClass=event.status==='Completed'?"s-completed":event.status==='Executing'?"s-executing":event.status==='Planning'?"s-planning":"";
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${fmtDate(event.eventDate)||"—"}</td><td>${escapeAttr(event.title||"Untitled event")}</td><td>${escapeAttr(event.eventType||"—")}</td><td><span class="status ${statusClass}">${escapeAttr(event.status||"—")}</span></td><td>${escapeAttr(event.owner||"—")}</td>`;
+      frag.appendChild(tr);
+    });
+    const undated=events.filter(ev=>!parseYMD(ev.eventDate));
+    undated.forEach(event=>{
+      const statusClass=event.status==='Completed'?"s-completed":event.status==='Executing'?"s-executing":event.status==='Planning'?"s-planning":"";
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>—</td><td>${escapeAttr(event.title||"Untitled event")}</td><td>${escapeAttr(event.eventType||"—")}</td><td><span class="status ${statusClass}">${escapeAttr(event.status||"—")}</span></td><td>${escapeAttr(event.owner||"—")}</td>`;
+      frag.appendChild(tr);
+    });
+    if(!chronological.length && !undated.length){
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td colspan="5" class="muted">No events available.</td>`;
+      frag.appendChild(tr);
+    }
+    tableBody.appendChild(frag);
+  }
+}
+
+function renderDashboardCalendar(){
+  const body=qs("#dashboardCalendarBody");
+  const label=qs("#calendarMonthLabel");
+  if(!body || !label) return;
+  const today=new Date();
+  const year=today.getFullYear();
+  const month=today.getMonth();
+  label.textContent=today.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  const startOffset=firstDay.getDay();
+  const totalDays=lastDay.getDate();
+
+  const events=filteredEvents();
+  const byDay=new Map();
+  events.forEach(ev=>{
+    const date=parseYMD(ev.eventDate);
+    if(!date) return;
+    if(date.getFullYear()===year && date.getMonth()===month){
+      const day=date.getDate();
+      if(!byDay.has(day)) byDay.set(day,[]);
+      byDay.get(day).push(ev);
+    }
+  });
+  byDay.forEach(list=>{
+    list.sort((a,b)=>{
+      const da=a.eventDate||"";
+      const db=b.eventDate||"";
+      if(da===db) return (a.title||"").localeCompare(b.title||"");
+      return da.localeCompare(db);
+    });
+  });
+
+  const weeks=[];
+  let cursor=1-startOffset;
+  while(cursor<=totalDays){
+    const week=[];
+    for(let i=0;i<7;i++){
+      if(cursor<1 || cursor>totalDays){
+        week.push(null);
+      }else{
+        week.push({
+          day:cursor,
+          events:byDay.get(cursor)||[],
+          isToday:cursor===today.getDate()
+        });
+      }
+      cursor+=1;
+    }
+    weeks.push(week);
+  }
+
+  const frag=fragment();
+  weeks.forEach(week=>{
+    const tr=document.createElement("tr");
+    week.forEach(cell=>{
+      const td=document.createElement("td");
+      if(!cell){
+        td.className="calendar-empty";
+        td.innerHTML="&nbsp;";
+      }else{
+        const wrapper=document.createElement("div");
+        wrapper.className="calendar-day";
+        if(cell.isToday) wrapper.classList.add("is-today");
+        const dateDiv=document.createElement("div");
+        dateDiv.className="calendar-date";
+        dateDiv.textContent=String(cell.day);
+        wrapper.appendChild(dateDiv);
+        if(cell.events.length){
+          const list=document.createElement("ul");
+          list.className="calendar-events";
+          cell.events.forEach(ev=>{
+            const li=document.createElement("li");
+            const titleSpan=document.createElement("span");
+            titleSpan.className="cal-event-title";
+            titleSpan.textContent=ev.title||"Untitled event";
+            li.appendChild(titleSpan);
+            const metaParts=[];
+            if(ev.eventType) metaParts.push(ev.eventType);
+            if(ev.status) metaParts.push(ev.status);
+            if(metaParts.length){
+              const metaSpan=document.createElement("span");
+              metaSpan.className="cal-event-meta";
+              metaSpan.textContent=metaParts.join(" • ");
+              li.appendChild(metaSpan);
+            }
+            list.appendChild(li);
+          });
+          wrapper.appendChild(list);
+        }
+        td.appendChild(wrapper);
+      }
+      tr.appendChild(td);
+    });
+    frag.appendChild(tr);
+  });
+
+  body.innerHTML="";
+  body.appendChild(frag);
+}
+
 function fillEventScope(){
   const sel = qs("#scopeEvent"); if(!sel) return;
   const keep = state.filters.eventId || "";
@@ -2009,6 +2430,8 @@ function renderAll(context){
   fillEventSelectors();
   fillEventScope();
   renderKPIs();
+  renderDashboardCalendar();
+  renderAnalysis();
   renderEventsTable();
   renderTasksTable();
   renderKanban();
