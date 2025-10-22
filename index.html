@@ -225,6 +225,12 @@ Perf notes:
     .event-card-form input:focus-visible,.event-card-form select:focus-visible{outline:2px solid var(--accent-3);box-shadow:var(--ring)}
     .event-card-form-actions{display:flex;gap:10px}
     .event-card-form-actions button{flex:1;justify-content:center}
+    .event-insights{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+    .event-insights li{display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+    .event-insights .insight-label{font-weight:600;color:var(--text);min-width:88px}
+    .event-insights .insight-value{flex:1;color:var(--muted)}
+    .vendor-events{display:flex;flex-wrap:wrap;gap:6px}
+    .vendor-events .vendor-event{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--pill);color:var(--text);font-size:12px;line-height:1.2}
     .events-empty{padding:18px;border:1px dashed var(--border);border-radius:14px;text-align:center;color:var(--muted);font-size:13px}
     #dashboard .card.kpi .kpi-trigger:focus-visible{outline:2px solid var(--accent-3);box-shadow:var(--ring);border-radius:inherit}
     #dashboard .card.kpi h3{margin:0;font-size:13px;font-weight:700;color:var(--kpi-heading);letter-spacing:.2px;text-transform:uppercase}
@@ -646,7 +652,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
     <div class="table-wrap" role="region" aria-label="Vendor sheet">
       <table id="tblVendors">
         <thead><tr>
-          <th scope="col">Name</th><th scope="col">Company</th><th scope="col">Role</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Contract</th><th scope="col">Payment</th><th scope="col">Docs</th><th scope="col" class="no-print">Actions</th>
+          <th scope="col">Name</th><th scope="col">Company</th><th scope="col">Role</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Events</th><th scope="col">Contract</th><th scope="col">Payment</th><th scope="col">Docs</th><th scope="col" class="no-print">Actions</th>
         </tr></thead><tbody></tbody>
       </table>
     </div>
@@ -659,6 +665,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       <div><div class="small">Role</div><input id="vRole" placeholder="e.g., Catering" data-testid="vendor-role"/></div>
       <div><div class="small">Email</div><input id="vEmail" type="email" inputmode="email" data-testid="vendor-email"/></div>
       <div><div class="small">Phone</div><input id="vPhone" inputmode="tel" data-testid="vendor-phone"/></div>
+      <div style="grid-column:1 / span 2;"><div class="small">Assigned Events</div><select id="vEvents" multiple size="4" data-testid="vendor-events"></select></div>
       <div><div class="small">Contract</div><select id="vContract" data-testid="vendor-contract"><option>Draft</option><option>Sent</option><option>Signed</option></select></div>
       <div><div class="small">Payment</div><select id="vPayment" data-testid="vendor-payment"><option>Due</option><option>Paid</option><option>Overdue</option></select></div>
       <div><div class="small">Docs (comma list)</div><input id="vDocs" placeholder="e.g., W9, Insurance" data-testid="vendor-docs"/></div>
@@ -1160,7 +1167,8 @@ const state={
   activeKPI:"upcoming",
   kpiDetails:{},
   lastKpiTrigger:null,
-  editingEventId:null
+  editingEventId:null,
+  eventGraph:null
 };
 let eventAddrAuto=null;
 let poiAddrAuto=null;
@@ -1221,8 +1229,8 @@ function seedDemo(){
     { id:uid("slt"), eventId:ev[2].id, title:"Soundcheck", lane:"Ballroom", start:addDays(t,7)+"T12:00", end:addDays(t,7)+"T13:00", notes:"Band + DJ" }
   ];
   const vendors=[
-    { id:uid("ven"), name:"Luna Catering", company:"Luna SA", role:"Catering", email:"sales@luna.mx", phone:"+52 55 0000 0000", contract:"Sent", payment:"Due", docs:"Insurance,W9" },
-    { id:uid("ven"), name:"FotoPro MX", company:"FotoPro", role:"Photography", email:"info@fotopro.mx", phone:"+52 33 1111 2222", contract:"Signed", payment:"Paid", docs:"Contract" }
+    { id:uid("ven"), name:"Luna Catering", company:"Luna SA", role:"Catering", email:"sales@luna.mx", phone:"+52 55 0000 0000", events:[ev[0].id, ev[2].id], contract:"Sent", payment:"Due", docs:"Insurance,W9" },
+    { id:uid("ven"), name:"FotoPro MX", company:"FotoPro", role:"Photography", email:"info@fotopro.mx", phone:"+52 33 1111 2222", events:[ev[0].id], contract:"Signed", payment:"Paid", docs:"Contract" }
   ];
   const budget=[
     { id:uid("bud"), eventId:ev[0].id, cat:"Venue", item:"Hall Rental", qty:1, unit:25000, tax:16, forecast:29000, actual:0, notes:"Includes chairs" },
@@ -1280,6 +1288,129 @@ function filteredEvents(){
 
     })
     .sort((a,b)=> (a.eventDate||"").localeCompare(b.eventDate||""));
+}
+
+/* ---------- Event Graph & Insights (cross-entity view) ---------- */
+const createTotals=()=>({ tasksTotal:0, tasksCompleted:0, overdueTasks:0, budgetForecast:0, budgetActual:0 });
+function buildEventGraph(){
+  const events=(store.data.events||[]).slice();
+  const map=new Map();
+  events.forEach(ev=>{
+    map.set(ev.id,{ event:ev, tasks:[], timeline:[], budget:[], vendors:[], note:null, totals:createTotals() });
+  });
+
+  const totals=createTotals();
+
+  (store.data.tasks||[]).forEach(task=>{
+    if(!task.eventId) return;
+    const bucket=map.get(task.eventId);
+    if(!bucket) return;
+    bucket.tasks.push(task);
+    bucket.totals.tasksTotal+=1;
+    totals.tasksTotal+=1;
+    if(task.status==="Completed"){
+      bucket.totals.tasksCompleted+=1;
+      totals.tasksCompleted+=1;
+    }
+    if(isTaskOverdue(task)){
+      bucket.totals.overdueTasks+=1;
+      totals.overdueTasks+=1;
+    }
+  });
+
+  (store.data.budget||[]).forEach(line=>{
+    if(!line.eventId) return;
+    const bucket=map.get(line.eventId);
+    if(!bucket) return;
+    const forecast=line.forecast || (toNumber(line.qty)*toNumber(line.unit)*(1+toNumber(line.tax)/100));
+    const actual=toNumber(line.actual);
+    bucket.budget.push({ ...line, forecast, actual, variance: actual-forecast });
+    bucket.totals.budgetForecast+=forecast;
+    bucket.totals.budgetActual+=actual;
+    totals.budgetForecast+=forecast;
+    totals.budgetActual+=actual;
+  });
+
+  (store.data.timeline||[]).forEach(slot=>{
+    if(!slot.eventId) return;
+    const bucket=map.get(slot.eventId);
+    if(!bucket) return;
+    bucket.timeline.push(slot);
+  });
+
+  (store.data.notes||[]).forEach(note=>{
+    if(!note.eventId) return;
+    const bucket=map.get(note.eventId);
+    if(!bucket) return;
+    bucket.note=note;
+  });
+
+  (store.data.vendors||[]).forEach(vendor=>{
+    const ids=Array.isArray(vendor.events)?vendor.events.filter(Boolean):[];
+    if(!ids.length) return;
+    ids.forEach(id=>{
+      const bucket=map.get(id);
+      if(bucket) bucket.vendors.push(vendor);
+    });
+  });
+
+  return { map, totals, events };
+}
+
+function buildEventInsights(bucket){
+  const data=bucket || { totals:createTotals(), vendors:[], timeline:[], note:null };
+  const totals=data.totals||createTotals();
+  const vendorNames=(data.vendors||[]).map(v=>((v.name||v.company||"").trim())).filter(Boolean);
+  const vendorSummary=vendorNames.length
+    ? `${vendorNames.length} ${vendorNames.length===1?"vendor":"vendors"}${vendorNames.length?` • ${vendorNames.slice(0,2).join(", ")}${vendorNames.length>2?"…":""}`:""}`
+    : "No vendors assigned";
+
+  const budgetForecast=totals.budgetForecast||0;
+  const budgetActual=totals.budgetActual||0;
+  const budgetSummary=(budgetForecast||budgetActual)
+    ? `${fmtMoney(budgetActual)} actual / ${fmtMoney(budgetForecast)} forecast`
+    : "No budget lines";
+
+  const timeline=Array.isArray(data.timeline)?data.timeline:[];
+  const timelineCount=timeline.length;
+  let nextDetail="";
+  if(timelineCount){
+    const sorted=timeline.slice().sort((a,b)=> (a.start||"").localeCompare(b.start||""));
+    const now=new Date();
+    const upcoming=sorted.find(slot=>{
+      const start=parseLocal(slot.start);
+      return start && start>=now;
+    }) || sorted[0];
+    if(upcoming?.start){
+      nextDetail=`Next: ${fmtDateTime(upcoming.start)}`;
+      const lane=(upcoming.lane||"").trim();
+      if(lane) nextDetail+=` @ ${lane}`;
+    }
+  }
+  const scheduleSummary=timelineCount
+    ? `${timelineCount} slot${timelineCount===1?"":"s"}${nextDetail?` • ${nextDetail}`:""}`
+    : "No timeline slots";
+
+  const tasksSummary=totals.tasksTotal
+    ? `${totals.tasksCompleted}/${totals.tasksTotal} completed${totals.overdueTasks?` • ${totals.overdueTasks} overdue`:""}`
+    : "No tasks yet";
+
+  const items=[
+    { label:"Vendors", value:vendorSummary },
+    { label:"Budget", value:budgetSummary },
+    { label:"Schedule", value:scheduleSummary },
+    { label:"Tasks", value:tasksSummary }
+  ];
+
+  if(data.note){
+    const rating=Number(data.note.rating);
+    const ratingText=Number.isFinite(rating)?`Rating ${rating.toFixed(1)}`:"Feedback logged";
+    const comment=(data.note.comment||"").replace(/\s+/g," ").trim();
+    const value=comment?`${ratingText} • ${comment}`:ratingText;
+    items.push({ label:"Feedback", value });
+  }
+
+  return `<ul class="event-insights">${items.map(({label,value})=>`<li><span class="insight-label">${escapeAttr(label)}</span><span class="insight-value">${escapeAttr(value)}</span></li>`).join("")}</ul>`;
 }
 
 /* ---------- Renderers: KPIs & Helpers ---------- */
@@ -1571,6 +1702,18 @@ function fillEventSelectors(){
     });
   });
 
+  const vendorSel=qs("#vEvents");
+  if(vendorSel){
+    const keep=new Set(Array.from(vendorSel.selectedOptions||[]).map(opt=>opt.value));
+    vendorSel.innerHTML="";
+    evsAll.forEach(e=>{
+      const o=document.createElement("option");
+      o.value=e.id; o.textContent=e.title;
+      if(keep.has(e.id)) o.selected=true;
+      vendorSel.appendChild(o);
+    });
+  }
+
   // Post-Event selector: only events that have ended (by date) or are marked Completed
   const ended = evsAll.filter(e=>eventHasEnded(e));
   const nSel = qs("#nEvent");
@@ -1620,44 +1763,40 @@ function renderDashTasks(){
 function renderEventsTable(){
   const list=qs("#eventCards"); if(!list) return; list.innerHTML="";
   const events=filteredEvents();
-  const tasksByEvent=new Map();
-  (store.data.tasks||[]).forEach(t=>{
-    if(!t.eventId) return;
-    const agg=tasksByEvent.get(t.eventId)||{total:0,completed:0};
-    agg.total+=1;
-    if(t.status==="Completed") agg.completed+=1;
-    tasksByEvent.set(t.eventId,agg);
-  });
+  const graph=(state.eventGraph && state.eventGraph.map) ? state.eventGraph.map : buildEventGraph().map;
 
   const displayData=[];
   let totalTasks=0;
   let totalCompleted=0;
 
   events.forEach(e=>{
-    const agg=tasksByEvent.get(e.id)||{total:0,completed:0};
-    const outstanding=Math.max(agg.total-agg.completed,0);
+    const bucket=graph.get(e.id)||null;
+    const totals=(bucket?.totals)||createTotals();
+    const outstanding=Math.max(totals.tasksTotal-totals.tasksCompleted,0);
     const hideCompleted=e.status==="Completed" && outstanding===0;
     if(hideCompleted){
       return;
     }
 
-    totalTasks+=agg.total;
-    totalCompleted+=agg.completed;
+    totalTasks+=totals.tasksTotal;
+    totalCompleted+=totals.tasksCompleted;
 
-    const percent=agg.total?Math.round((agg.completed/agg.total)*100):0;
+    const percent=totals.tasksTotal?Math.round((totals.tasksCompleted/totals.tasksTotal)*100):0;
     const statusClass=e.status==='Completed'?'s-completed':e.status==='Executing'?'s-executing':'s-planning';
-    const taskSummary=agg.total?`${agg.completed} of ${agg.total} tasks completed`:"No tasks yet";
+    const progressSummary=totals.tasksTotal?`${totals.tasksCompleted} of ${totals.tasksTotal} tasks completed`:"No tasks yet";
     const metaParts=[];
     if(e.eventDate) metaParts.push(fmtDate(e.eventDate));
     if(e.eventType) metaParts.push(e.eventType);
     const metaLine=metaParts.length?metaParts.join(" · "):"Details TBD";
+    const insightsMarkup=buildEventInsights(bucket);
 
     displayData.push({
       event:e,
       percent,
       statusClass,
-      taskSummary,
-      metaLine
+      progressSummary,
+      metaLine,
+      insightsMarkup
     });
   });
 
@@ -1667,7 +1806,7 @@ function renderEventsTable(){
 
   const frag=fragment();
 
-  displayData.forEach(({event:e, percent, statusClass, taskSummary, metaLine})=>{
+  displayData.forEach(({event:e, percent, statusClass, progressSummary, metaLine, insightsMarkup})=>{
     const card=document.createElement("article");
     const isEditing=state.editingEventId===e.id;
     card.className="event-card"+(isEditing?" is-editing":"");
@@ -1675,7 +1814,7 @@ function renderEventsTable(){
     card.setAttribute("role","listitem");
 
     const addressHtml=escapeAttr(e.address||"");
-    const summaryText=escapeAttr(taskSummary);
+    const summaryText=escapeAttr(progressSummary);
     const metaHtml=escapeAttr(metaLine);
     const ownerHtml=e.owner?`<div class="event-meta">Owner: ${escapeAttr(e.owner)}</div>`:"";
     const titleHtml=escapeAttr(e.title||"Untitled Event");
@@ -1720,6 +1859,7 @@ function renderEventsTable(){
             <label><span>Longitude</span><input data-field="lon" type="number" step="any" value="${lonValue}"></label>
           </div>
           ${progressMarkup}
+          ${insightsMarkup}
           <div class="event-card-form-actions no-print">
             <button type="button" class="success" onclick="saveEventInline('${e.id}')"><svg class="icon"><use href="#ic-save"></use></svg> Save</button>
             <button type="button" class="ghost" onclick="cancelEventInline()"><svg class="icon"><use href="#ic-refresh"></use></svg> Cancel</button>
@@ -1738,8 +1878,9 @@ function renderEventsTable(){
         </div>
         <div class="event-address">${addressHtml}</div>
         ${progressMarkup}
+        ${insightsMarkup}
         <div class="event-actions no-print">
-          <button class="ghost" title="Edit" onclick="editEvent('${e.id}')"><svg class="icon"><use href="#ic-edit"></use></svg> Edit</button>
+          <button class="ghost" title="Edit" onclick="editEvent('${e.id}')"><svg class="icon"><use href="#ic-edit"></use></svg>Edit</button>
           <button class="danger" title="Delete" onclick="delEvent('${e.id}')"><svg class="icon"><use href="#ic-trash"></use></svg> Delete</button>
         </div>`;
     }
@@ -2006,6 +2147,7 @@ qs("#btnResetEvent")?.addEventListener("click", () => {
 });
 /* ---------- Render orchestrator ---------- */
 function renderAll(context){
+  state.eventGraph=buildEventGraph();
   fillEventSelectors();
   fillEventScope();
   renderKPIs();
@@ -2084,24 +2226,52 @@ function renderVendors(){
   const tbody=qs("#tblVendors tbody"); if(!tbody) return; tbody.innerHTML="";
   const frag=fragment();
   const list=store.data.vendors.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const graphMap=(state.eventGraph && state.eventGraph.map) ? state.eventGraph.map : new Map();
   list.forEach(v=>{
+    const assignedIds=Array.isArray(v.events)?v.events.filter(Boolean):[];
+    const eventNames=assignedIds.map(id=>{
+      const event=graphMap.get(id)?.event || store.data.events.find(e=>e.id===id);
+      return event?event.title:null;
+    }).filter(Boolean);
+    const missingCount=assignedIds.length-eventNames.length;
+    let eventsHtml="—";
+    if(assignedIds.length){
+      const chips=[];
+      eventNames.forEach(name=>{ chips.push(`<span class="vendor-event">${escapeAttr(name)}</span>`); });
+      if(missingCount>0){ chips.push(`<span class="vendor-event">Unknown (${missingCount})</span>`); }
+      eventsHtml=`<div class="vendor-events">${chips.join("")}</div>`;
+    }
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${v.name||""}</td><td>${v.company||""}</td><td>${v.role||""}</td><td>${v.email||""}</td><td>${v.phone||""}</td><td><span class="status">${v.contract||"—"}</span></td><td><span class="status ${v.payment==='Overdue'?'s-overdue':v.payment==='Paid'?'s-completed':''}">${v.payment||"—"}</span></td><td>${v.docs||""}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editVendor('${v.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delVendor('${v.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
+    tr.innerHTML=`<td>${v.name||""}</td><td>${v.company||""}</td><td>${v.role||""}</td><td>${v.email||""}</td><td>${v.phone||""}</td><td>${eventsHtml}</td><td><span class="status">${v.contract||"—"}</span></td><td><span class="status ${v.payment==='Overdue'?'s-overdue':v.payment==='Paid'?'s-completed':''}">${v.payment||"—"}</span></td><td>${v.docs||""}</td><td class="row no-print"><button class="ghost"title="Edit" onclick="editVendor('${v.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger"title="Delete" onclick="delVendor('${v.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
 }
-function resetVendorForm(){ ["vId","vName","vCompany","vRole","vEmail","vPhone","vDocs"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""}); if(qs("#vContract")) qs("#vContract").value="Draft"; if(qs("#vPayment")) qs("#vPayment").value="Due" }
+function resetVendorForm(){
+  ["vId","vName","vCompany","vRole","vEmail","vPhone","vDocs"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""});
+  if(qs("#vContract")) qs("#vContract").value="Draft";
+  if(qs("#vPayment")) qs("#vPayment").value="Due";
+  const multi=qs("#vEvents");
+  if(multi){ Array.from(multi.options||[]).forEach(opt=>{ opt.selected=false; }); }
+  fillEventSelectors();
+}
 function editVendor(id){
   const v=store.data.vendors.find(x=>x.id===id); if(!v) return;
   qs("#vId").value=v.id; qs("#vName").value=v.name||""; qs("#vCompany").value=v.company||""; qs("#vRole").value=v.role||"";
   qs("#vEmail").value=v.email||""; qs("#vPhone").value=v.phone||""; qs("#vContract").value=v.contract||"Draft"; qs("#vPayment").value=v.payment||"Due"; qs("#vDocs").value=v.docs||"";
+  const multi=qs("#vEvents");
+  if(multi){
+    const assigned=new Set(Array.isArray(v.events)?v.events.filter(Boolean):[]);
+    Array.from(multi.options||[]).forEach(opt=>{ opt.selected=assigned.has(opt.value); });
+  }
   navigate("#/vendors");
 }
 function delVendor(id){ if(confirm("Delete this vendor?")){ store.remove("vendors",id); renderAll("vendors") } }
 qs("#btnAddVendor")?.addEventListener("click",()=>{ resetVendorForm(); navigate("#/vendors"); qs("#vName")?.focus() });
 qs("#btnSaveVendor")?.addEventListener("click",()=>{
-  const v={ id:(qs("#vId")?.value||"").trim()||null, name:qs("#vName")?.value.trim(), company:qs("#vCompany")?.value.trim(), role:qs("#vRole")?.value.trim(), email:qs("#vEmail")?.value.trim(), phone:qs("#vPhone")?.value.trim(), contract:qs("#vContract")?.value, payment:qs("#vPayment")?.value, docs:qs("#vDocs")?.value.trim() };
+  const eventIds=Array.from(qs("#vEvents")?.selectedOptions||[]).map(opt=>opt.value).filter(Boolean);
+  const uniqueEvents=[...new Set(eventIds)];
+  const v={ id:(qs("#vId")?.value||"").trim()||null, name:qs("#vName")?.value.trim(), company:qs("#vCompany")?.value.trim(), role:qs("#vRole")?.value.trim(), email:qs("#vEmail")?.value.trim(), phone:qs("#vPhone")?.value.trim(), events:uniqueEvents, contract:qs("#vContract")?.value, payment:qs("#vPayment")?.value, docs:qs("#vDocs")?.value.trim() };
   if(!v.name){ alert("Vendor name is required"); return }
   store.upsert("vendors",v); resetVendorForm(); renderAll("vendors");
 });
