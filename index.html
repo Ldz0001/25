@@ -198,6 +198,28 @@ Perf notes:
     #dashboard .card.kpi{background:var(--kpi-surface);border-color:var(--kpi-border);padding:0;box-shadow:0 12px 24px -16px var(--accent-2);text-align:left;transition:transform .12s ease,box-shadow .12s ease;display:flex}
     #dashboard .card.kpi:hover,#dashboard .card.kpi:focus-within{transform:translateY(-2px);box-shadow:0 18px 32px -18px var(--accent-2)}
     #dashboard .card.kpi .kpi-trigger{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px;width:100%;height:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;flex:1;border-radius:inherit}
+    #dashboard .calendar-card{margin-top:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+    .calendar-header{display:flex;align-items:center;gap:12px}
+    .calendar-header .spacer{flex:1}
+    .calendar-month{font-weight:600;color:var(--accent-2)}
+    .calendar-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .calendar-weekdays div{text-align:center}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+    .calendar-day{background:var(--card);border:1px solid var(--border);border-radius:14px;min-height:120px;padding:8px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+    .calendar-day .date-label{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:6px}
+    .calendar-day .date-label .count{background:var(--pill);border-radius:999px;padding:2px 6px;font-size:11px;font-weight:600;color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--border)}
+    .calendar-day ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+    .calendar-day li{font-size:12px;line-height:1.3;background:var(--pill);border-radius:10px;padding:4px 6px;color:var(--text);box-shadow:inset 0 0 0 1px var(--border)}
+    .calendar-day.is-outside{background:transparent;border-style:dashed;color:var(--muted);box-shadow:none}
+    .calendar-day.is-outside .date-label{color:var(--muted)}
+    .calendar-empty{font-size:13px;color:var(--muted)}
+    #analysis .analysis-layout{display:grid;gap:18px;margin-bottom:18px}
+    #analysis .projection-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+    #analysis .projection-title{text-transform:uppercase;font-size:12px;letter-spacing:.5px;color:var(--muted)}
+    #analysis .projection-value{font-size:32px;font-weight:700;color:var(--accent-2)}
+    #analysis .projection-detail{font-size:14px;font-weight:600;color:var(--kpi-heading)}
+    #analysis .projection-meta{font-size:12px;color:var(--muted);line-height:1.4}
+    #analysis .table-wrap{margin-top:0}
     .events-progress{margin:16px 0 24px;display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:var(--shadow)}
     .events-progress .progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
     .events-progress .progress-title{font-weight:600;font-size:14px;color:var(--kpi-heading);text-transform:uppercase;letter-spacing:.5px}
@@ -474,6 +496,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
 </div>
   <nav role="navigation" aria-label="Primary">
     <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
+    <button class="tab-btn" data-testid="nav-analysis" data-route="#/analysis">Analysis</button>
     <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
     <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
     <button class="tab-btn" data-testid="nav-timeline" data-route="#/timeline">Timeline</button>
@@ -546,6 +569,49 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
         </button>
       </div>
       <div id="kpiDetailBody" class="kpi-detail-body"></div>
+    </div>
+    <div class="card calendar-card" role="group" aria-labelledby="calendarHeading">
+      <div class="calendar-header">
+        <h3 id="calendarHeading">This Month's Calendar</h3>
+        <div class="spacer"></div>
+        <div class="calendar-month" id="calendarMonthLabel"></div>
+      </div>
+      <div class="calendar-weekdays" aria-hidden="true">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid" aria-labelledby="calendarHeading"></div>
+      <div id="calendarEmpty" class="calendar-empty" hidden>No events this month under current filters.</div>
+    </div>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section id="analysis" class="tab card" role="region" aria-labelledby="h-analysis" hidden>
+    <div class="row">
+      <h3 id="h-analysis">Analysis</h3>
+      <div class="spacer"></div>
+      <div class="small muted">Seasonal insights & projections across your events.</div>
+    </div>
+    <div class="analysis-layout" aria-live="polite">
+      <div class="projection-card" role="group" aria-labelledby="analysisProjectionTitle">
+        <div id="analysisProjectionTitle" class="projection-title">Projected Events Next Month</div>
+        <div id="analysisProjectionValue" class="projection-value">0</div>
+        <div id="analysisProjectionDetail" class="projection-detail">Waiting for event data…</div>
+        <div id="analysisProjectionMeta" class="projection-meta"></div>
+      </div>
+    </div>
+    <div class="table-wrap" role="region" aria-label="Chronological event list">
+      <table id="tblAnalysisEvents">
+        <thead>
+          <tr>
+            <th scope="col">Event</th>
+            <th scope="col">Date</th>
+            <th scope="col">Status</th>
+            <th scope="col">Type</th>
+            <th scope="col">Owner</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 
@@ -847,6 +913,7 @@ const isAfter=(a,b)=>{const da=parseYMD(a), db=parseYMD(b); if(!da||!db) return 
 const addDays=(s,n)=>{const d=parseYMD(s)||new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10)};
 const fmtDate=s=>{if(!s)return""; const d=parseYMD(s)||parseLocal(s); if(!d)return""; return d.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'})};
 const fmtDateTime=s=>{if(!s)return""; const d=parseLocal(s)||new Date(s); return d.toLocaleString(undefined,{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})};
+const toYMD=date=>{if(!(date instanceof Date)||Number.isNaN(date.getTime())) return""; const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,'0'); const d=String(date.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`};
 const uid=(p="id")=>`${p}_${Math.random().toString(36).slice(2,9)}`;
 const fragment=()=>document.createDocumentFragment();
 const escapeAttr=v=>String(v??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -1165,7 +1232,7 @@ const state={
 let eventAddrAuto=null;
 let poiAddrAuto=null;
 /* ---------- Router (hash) ---------- */
-const ROUTES=["#/dashboard","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
+const ROUTES=["#/dashboard","#/analysis","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
 function navigate(hash){
   const h=ROUTES.includes(hash)?hash:"#/dashboard";
   if(location.hash!==h) location.hash=h;
@@ -1616,6 +1683,173 @@ function renderDashTasks(){
   tbody.appendChild(frag);
 }
 
+function computeSeasonalProjection(){
+  const today=parseYMD(todayYMD())||new Date();
+  const targetStart=new Date(today.getFullYear(),today.getMonth()+1,1);
+  const targetEnd=new Date(today.getFullYear(),today.getMonth()+2,0);
+  const startYMD=toYMD(targetStart);
+  const endYMD=toYMD(targetEnd);
+  const monthIndex=targetStart.getMonth();
+  const events=(store.data.events||[]).filter(e=>e.eventDate);
+  const withDates=events.map(ev=>({ev,date:parseYMD(ev.eventDate)})).filter(item=>item.date instanceof Date && !Number.isNaN(item.date.getTime()));
+  const historical=withDates.filter(item=>item.date<targetStart && item.date.getMonth()===monthIndex);
+  const years=new Set(historical.map(item=>item.date.getFullYear()));
+  const baseline=years.size?historical.length/years.size:0;
+  const upcomingCount=withDates.filter(item=>item.ev.eventDate>=startYMD && item.ev.eventDate<=endYMD).length;
+
+  const ratios=[];
+  for(let offset=1; offset<=3; offset++){
+    const monthStart=new Date(targetStart.getFullYear(),targetStart.getMonth()-offset,1);
+    const monthEnd=new Date(targetStart.getFullYear(),targetStart.getMonth()-offset+1,0);
+    const rangeStart=toYMD(monthStart);
+    const rangeEnd=toYMD(monthEnd);
+    const actual=withDates.filter(item=>item.ev.eventDate>=rangeStart && item.ev.eventDate<=rangeEnd).length;
+    const monthHistorical=withDates.filter(item=>item.date<monthStart && item.date.getMonth()===monthStart.getMonth());
+    const monthYears=new Set(monthHistorical.map(item=>item.date.getFullYear()));
+    const seasonalAvg=monthYears.size?monthHistorical.length/monthYears.size:0;
+    if(seasonalAvg>0){
+      ratios.push(actual/seasonalAvg);
+    }else if(actual>0){
+      ratios.push(1+actual*0.1);
+    }
+  }
+  const trendMultiplier=ratios.length?ratios.reduce((sum,val)=>sum+val,0)/ratios.length:1;
+  const baselineAdjusted=baseline*trendMultiplier;
+  const weighted=(baselineAdjusted*0.6)+(upcomingCount*0.4);
+  const projected=Math.round(Math.max(weighted,baselineAdjusted,upcomingCount));
+  return {
+    projected,
+    baseline,
+    baselineAdjusted,
+    upcomingCount,
+    trendMultiplier,
+    historicalCount:historical.length,
+    yearCount:years.size,
+    targetLabel:targetStart.toLocaleDateString(undefined,{month:'long',year:'numeric'}),
+    startYMD,
+    endYMD
+  };
+}
+
+function renderAnalysis(){
+  const tbody=qs("#tblAnalysisEvents tbody");
+  const valueEl=qs("#analysisProjectionValue");
+  const detailEl=qs("#analysisProjectionDetail");
+  const metaEl=qs("#analysisProjectionMeta");
+  if(tbody){
+    tbody.innerHTML="";
+    const events=filteredEvents();
+    if(events.length){
+      const frag=fragment();
+      events.forEach(ev=>{
+        const dateText=ev.eventDate?fmtDate(ev.eventDate):"Date TBD";
+        const status=(ev.status||"Planning");
+        const statusClass=status==="Completed"?"s-completed":status==="Executing"?"s-executing":status==="Planning"?"s-planning":"";
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${ev.title||"Untitled"}</td><td>${dateText}</td><td><span class="status ${statusClass}">${status}</span></td><td>${ev.eventType||""}</td><td>${ev.owner||"—"}</td>`;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }else{
+      const tr=document.createElement("tr");
+      tr.innerHTML='<td colspan="5" class="muted">No events match the current filters.</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  if(valueEl&&detailEl&&metaEl){
+    const projection=computeSeasonalProjection();
+    const projected=isFinite(projection.projected)?projection.projected:0;
+    valueEl.textContent=String(projected);
+    detailEl.textContent=`Projected events in ${projection.targetLabel}`;
+    const metaParts=[];
+    if(projection.yearCount){
+      metaParts.push(`Seasonal average (${projection.yearCount} year${projection.yearCount===1?"":"s"}): ${projection.baseline.toFixed(1)}`);
+    }else{
+      metaParts.push("Not enough seasonal history — using scheduled work to drive forecast.");
+    }
+    metaParts.push(`Scheduled next month: ${projection.upcomingCount}`);
+    metaParts.push(`Trend multiplier (last quarter vs seasonal): ${projection.trendMultiplier.toFixed(2)}`);
+    metaEl.textContent=metaParts.join(" • ");
+  }
+}
+
+function renderDashboardCalendar(){
+  const grid=qs("#calendarGrid");
+  const label=qs("#calendarMonthLabel");
+  const empty=qs("#calendarEmpty");
+  if(!(grid&&label&&empty)) return;
+  grid.innerHTML="";
+  const today=parseYMD(todayYMD())||new Date();
+  const year=today.getFullYear();
+  const month=today.getMonth();
+  const monthStart=new Date(year,month,1);
+  const monthEnd=new Date(year,month+1,0);
+  label.textContent=monthStart.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const firstDay=monthStart.getDay();
+  const daysInMonth=monthEnd.getDate();
+  const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+  const startYMD=toYMD(monthStart);
+  const endYMD=toYMD(monthEnd);
+  const byDay=new Map();
+  filteredEvents().forEach(ev=>{
+    if(!ev.eventDate) return;
+    if(ev.eventDate<startYMD||ev.eventDate>endYMD) return;
+    const day=Number(ev.eventDate.slice(8,10));
+    if(!byDay.has(day)) byDay.set(day,[]);
+    byDay.get(day).push(ev);
+  });
+  byDay.forEach(list=>list.sort((a,b)=>{
+    const cmp=(a.eventDate||"").localeCompare(b.eventDate||"");
+    return cmp!==0?cmp:(a.title||"").localeCompare(b.title||"");
+  }));
+
+  for(let idx=0; idx<totalCells; idx++){
+    const dayNumber=idx-firstDay+1;
+    const inMonth=dayNumber>=1&&dayNumber<=daysInMonth;
+    const cell=document.createElement("div");
+    cell.className="calendar-day"+(inMonth?"":" is-outside");
+    cell.setAttribute("role","gridcell");
+    if(inMonth){
+      const eventsForDay=byDay.get(dayNumber)||[];
+      const header=document.createElement("div");
+      header.className="date-label";
+      const countSpan=document.createElement("span");
+      countSpan.className="count";
+      countSpan.textContent=eventsForDay.length?String(eventsForDay.length):"";
+      header.innerHTML=`<span>${dayNumber}</span>`;
+      if(eventsForDay.length){
+        header.appendChild(countSpan);
+      }
+      cell.appendChild(header);
+      const labelText=`${label.textContent} ${dayNumber}`;
+      if(eventsForDay.length){
+        cell.setAttribute("aria-label",`${labelText}. ${eventsForDay.length} event${eventsForDay.length===1?"":"s"}.`);
+        const list=document.createElement("ul");
+        eventsForDay.forEach(ev=>{
+          const li=document.createElement("li");
+          const pieces=[ev.title||"Untitled event"];
+          if(ev.eventType) pieces.push(ev.eventType);
+          li.textContent=pieces.join(" • ");
+          list.appendChild(li);
+        });
+        cell.appendChild(list);
+      }else{
+        cell.setAttribute("aria-label",`${labelText}. No events.`);
+      }
+    }else{
+      const refDate=new Date(year,month,dayNumber);
+      const header=document.createElement("div");
+      header.className="date-label";
+      header.innerHTML=`<span>${refDate.getDate()}</span>`;
+      cell.appendChild(header);
+      cell.setAttribute("aria-hidden","true");
+    }
+    grid.appendChild(cell);
+  }
+  empty.hidden=byDay.size>0;
+}
+
 /* ---------- Events table & form actions ---------- */
 function renderEventsTable(){
   const list=qs("#eventCards"); if(!list) return; list.innerHTML="";
@@ -2009,6 +2243,8 @@ function renderAll(context){
   fillEventSelectors();
   fillEventScope();
   renderKPIs();
+  renderDashboardCalendar();
+  renderAnalysis();
   renderEventsTable();
   renderTasksTable();
   renderKanban();
