@@ -207,6 +207,10 @@ Perf notes:
     .meter-fill{position:absolute;inset:0;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-3));border-radius:inherit;transition:width .3s ease}
     .event-card-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
     .event-card{border:1px solid var(--border);border-radius:16px;padding:18px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;min-height:220px;position:relative}
+    .event-insights{display:grid;gap:6px;font-size:12px;color:var(--muted);line-height:1.35}
+    .event-insights strong{color:var(--text);font-weight:600}
+    .event-relations{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+    .event-relations .relation-chip{font-size:12px;padding:4px 8px;border-radius:999px;background:var(--pill);color:var(--muted);border:1px solid var(--border)}
     .event-card.is-editing{gap:16px;padding:18px 18px 16px;border-color:var(--accent-2);box-shadow:0 12px 28px -18px var(--accent-2)}
     .event-card-header{display:flex;align-items:flex-start;gap:12px}
     .event-card-title{display:flex;flex-direction:column;gap:6px;flex:1}
@@ -273,6 +277,19 @@ Perf notes:
     .grid>*{min-width:0}
     .grid>.card,
     .grid>form{width:100%}
+    .insights-grid{margin-top:18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .insight-card{display:flex;flex-direction:column;gap:10px}
+    .insight-card h3{margin:0;font-size:16px}
+    .insight-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+    .insight-item{display:flex;flex-direction:column;gap:4px}
+    .insight-title{font-weight:600;font-size:14px}
+    .insight-subtitle{font-size:12px;color:var(--muted)}
+    .insight-chips{display:flex;flex-wrap:wrap;gap:6px}
+    .insight-chip{background:var(--pill);border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:12px;line-height:1.6;white-space:nowrap}
+    .insight-meta{font-size:12px;color:var(--muted)}
+    .insight-empty{font-size:13px;color:var(--muted)}
+    .vendor-engagement{display:flex;flex-direction:column;gap:4px}
+    .vendor-engagement .insight-chips{margin-top:0}
     .grid-1{grid-template-columns:1fr}
     .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -291,6 +308,8 @@ Perf notes:
     #timeline .slots-card .table-wrap{flex:1}
     #events form.grid-4,
     #vendors form.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    #vendors select[multiple]{min-height:120px;padding:8px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;line-height:1.45}
+    #map select{padding:8px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text)}
     #budget form.grid-5{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
     .card h3{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:700}
     .kpi .value{font-size:34px;font-weight:900;margin-top:6px;color:var(--accent-2);text-shadow:0 0 8px var(--glow)}
@@ -547,6 +566,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       </div>
       <div id="kpiDetailBody" class="kpi-detail-body"></div>
     </div>
+    <div id="relationshipInsights" class="insights-grid" aria-live="polite"></div>
   </section>
 
   <!-- EVENTS -->
@@ -646,7 +666,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
     <div class="table-wrap" role="region" aria-label="Vendor sheet">
       <table id="tblVendors">
         <thead><tr>
-          <th scope="col">Name</th><th scope="col">Company</th><th scope="col">Role</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Contract</th><th scope="col">Payment</th><th scope="col">Docs</th><th scope="col" class="no-print">Actions</th>
+          <th scope="col">Name</th><th scope="col">Company</th><th scope="col">Role</th><th scope="col">Events</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Contract</th><th scope="col">Payment</th><th scope="col">Docs</th><th scope="col">Engagement</th><th scope="col" class="no-print">Actions</th>
         </tr></thead><tbody></tbody>
       </table>
     </div>
@@ -657,6 +677,8 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
       <div><div class="small">Name*</div><input id="vName" required data-testid="vendor-name"/></div>
       <div><div class="small">Company</div><input id="vCompany" data-testid="vendor-company"/></div>
       <div><div class="small">Role</div><input id="vRole" placeholder="e.g., Catering" data-testid="vendor-role"/></div>
+      <div style="grid-column:1 / span 2;"><div class="small">Linked Events</div><select id="vEvents" multiple data-testid="vendor-events"></select></div>
+      <div class="multi-hint" style="grid-column:1 / -1;">Tip: Hold Ctrl (Cmd on Mac) to select multiple events.</div>
       <div><div class="small">Email</div><input id="vEmail" type="email" inputmode="email" data-testid="vendor-email"/></div>
       <div><div class="small">Phone</div><input id="vPhone" inputmode="tel" data-testid="vendor-phone"/></div>
       <div><div class="small">Contract</div><select id="vContract" data-testid="vendor-contract"><option>Draft</option><option>Sent</option><option>Signed</option></select></div>
@@ -806,6 +828,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
         <input id="pAddress" placeholder="Start typing an address…" autocomplete="off" data-testid="poi-address" aria-autocomplete="list" aria-controls="poiAddrList" aria-expanded="false"/>
         <div id="poiAddrList" class="autocomplete-list" role="listbox" style="display:none;"></div>
       </div>
+      <div style="grid-column:1 / span 2;"><div class="small">Linked Event</div><select id="pEvent" data-testid="poi-event"><option value="">General (no specific event)</option></select></div>
       <div style="grid-column:1 / span 2;"><div class="small">Latitude</div><input id="pLat" type="number" step="any" placeholder="auto from address" data-testid="poi-lat"/></div>
       <div style="grid-column:3 / span 2;"><div class="small">Longitude</div><input id="pLon" type="number" step="any" placeholder="auto from address" data-testid="poi-lon"/></div>
     </div>
@@ -1160,7 +1183,8 @@ const state={
   activeKPI:"upcoming",
   kpiDetails:{},
   lastKpiTrigger:null,
-  editingEventId:null
+  editingEventId:null,
+  graph:null
 };
 let eventAddrAuto=null;
 let poiAddrAuto=null;
@@ -1221,8 +1245,8 @@ function seedDemo(){
     { id:uid("slt"), eventId:ev[2].id, title:"Soundcheck", lane:"Ballroom", start:addDays(t,7)+"T12:00", end:addDays(t,7)+"T13:00", notes:"Band + DJ" }
   ];
   const vendors=[
-    { id:uid("ven"), name:"Luna Catering", company:"Luna SA", role:"Catering", email:"sales@luna.mx", phone:"+52 55 0000 0000", contract:"Sent", payment:"Due", docs:"Insurance,W9" },
-    { id:uid("ven"), name:"FotoPro MX", company:"FotoPro", role:"Photography", email:"info@fotopro.mx", phone:"+52 33 1111 2222", contract:"Signed", payment:"Paid", docs:"Contract" }
+    { id:uid("ven"), name:"Luna Catering", company:"Luna SA", role:"Catering", email:"sales@luna.mx", phone:"+52 55 0000 0000", contract:"Sent", payment:"Due", docs:"Insurance,W9", events:[ev[0].id] },
+    { id:uid("ven"), name:"FotoPro MX", company:"FotoPro", role:"Photography", email:"info@fotopro.mx", phone:"+52 33 1111 2222", contract:"Signed", payment:"Paid", docs:"Contract", events:[ev[0].id,ev[2].id] }
   ];
   const budget=[
     { id:uid("bud"), eventId:ev[0].id, cat:"Venue", item:"Hall Rental", qty:1, unit:25000, tax:16, forecast:29000, actual:0, notes:"Includes chairs" },
@@ -1230,11 +1254,281 @@ function seedDemo(){
     { id:uid("bud"), eventId:ev[2].id, cat:"Music", item:"DJ Package", qty:1, unit:8000, tax:0, forecast:8000, actual:0, notes:"" }
   ];
   const pois=[
-    { id:uid("poi"), label:"Hotel Centro", type:"Hotel", lat:19.434, lon:-99.14, address:"Hotel Centro Histórico, Ciudad de México" },
-    { id:uid("poi"), label:"Parking P1", type:"Parking", lat:19.431, lon:-99.129, address:"Estacionamiento Pino Suárez, Ciudad de México" }
+    { id:uid("poi"), label:"Hotel Centro", type:"Hotel", lat:19.434, lon:-99.14, address:"Hotel Centro Histórico, Ciudad de México", eventId:ev[0].id },
+    { id:uid("poi"), label:"Parking P1", type:"Parking", lat:19.431, lon:-99.129, address:"Estacionamiento Pino Suárez, Ciudad de México", eventId:ev[0].id }
   ];
   store.data={events:ev,tasks,notes:[],timeline,vendors,budget,pois};
   store.save();
+}
+
+function buildEventGraph(events){
+  const today=todayYMD();
+  const now=new Date();
+  const allEvents=store.data.events||[];
+  const eventById=new Map(allEvents.map(ev=>[ev.id,ev]));
+  const scopedIds=new Set(events.map(ev=>ev.id));
+  const map=new Map();
+  const vendorInsights=new Map();
+  const ensureVendorEntry=(vendor)=>{
+    if(!vendor) return null;
+    const key=vendor.id;
+    if(!key) return null;
+    let entry=vendorInsights.get(key);
+    if(!entry){
+      entry={
+        vendor,
+        eventSet:new Set(),
+        events:[],
+        overdueDetails:[],
+        stats:{
+          eventCount:0,
+          tasksTotal:0,
+          tasksCompleted:0,
+          tasksOutstanding:0,
+          tasksOverdue:0,
+          budgetForecast:0,
+          budgetActual:0,
+          budgetVariance:0,
+          tasksCompletion:0,
+          poiCount:0,
+          timelineCount:0,
+          statuses:new Set(),
+          nextMilestone:null,
+          nextMilestoneTime:Number.POSITIVE_INFINITY
+        }
+      };
+      vendorInsights.set(key,entry);
+    }
+    return entry;
+  };
+
+  events.forEach(ev=>{
+    map.set(ev.id,{
+      event:ev,
+      tasks:[],
+      notes:[],
+      timeline:[],
+      vendors:[],
+      budget:[],
+      pois:[],
+      stats:{
+        tasksTotal:0,
+        tasksCompleted:0,
+        tasksOutstanding:0,
+        tasksOverdue:0,
+        overdueTasks:[],
+        budgetForecast:0,
+        budgetActual:0,
+        budgetVariance:0,
+        hasBudget:false,
+        ratingSum:0,
+        ratingCount:0,
+        avgRating:null,
+        nextTimeline:null,
+        vendorCount:0,
+        poiCount:0
+      }
+    });
+  });
+
+  const totals={
+    tasksTotal:0,
+    tasksCompleted:0,
+    tasksOverdue:0,
+    overdueTasks:[],
+    budgetForecast:0,
+    budgetActual:0,
+    budgetVariance:0,
+    ratingSum:0,
+    ratingCount:0,
+    ratingAverage:null,
+    ratings:[],
+    ratedEvents:new Set(),
+    upcomingEvents:[]
+  };
+
+  (store.data.tasks||[]).forEach(task=>{
+    if(!scopedIds.has(task.eventId)) return;
+    const ctx=map.get(task.eventId);
+    if(!ctx) return;
+    ctx.tasks.push(task);
+    ctx.stats.tasksTotal+=1;
+    totals.tasksTotal+=1;
+    if((task.status||"").trim()==="Completed"){
+      ctx.stats.tasksCompleted+=1;
+      totals.tasksCompleted+=1;
+    }else if(task.dueDate && isBefore(task.dueDate,today)){
+      ctx.stats.tasksOverdue+=1;
+      totals.tasksOverdue+=1;
+      const detail={task,event:ctx.event};
+      ctx.stats.overdueTasks.push(detail);
+      totals.overdueTasks.push(detail);
+    }
+  });
+
+  (store.data.budget||[]).forEach(item=>{
+    const qty=toNumber(item.qty||1);
+    const unit=toNumber(item.unit||0);
+    const base=qty*unit;
+    const taxRate=toNumber(item.tax||0)/100;
+    const fallback=base*(1+taxRate);
+    const forecast=toNumber(item.forecast||0) || fallback;
+    const actual=toNumber(item.actual||0);
+    totals.budgetForecast+=forecast;
+    totals.budgetActual+=actual;
+    if(item.eventId && scopedIds.has(item.eventId)){
+      const ctx=map.get(item.eventId);
+      if(ctx){
+        ctx.budget.push(item);
+        ctx.stats.budgetForecast+=forecast;
+        ctx.stats.budgetActual+=actual;
+        ctx.stats.hasBudget=true;
+      }
+    }
+  });
+
+  (store.data.timeline||[]).forEach(slot=>{
+    if(!scopedIds.has(slot.eventId)) return;
+    const ctx=map.get(slot.eventId);
+    if(ctx){
+      ctx.timeline.push(slot);
+    }
+  });
+
+  (store.data.notes||[]).forEach(note=>{
+    if(!scopedIds.has(note.eventId)) return;
+    const ctx=map.get(note.eventId);
+    if(!ctx) return;
+    ctx.notes.push(note);
+    const eventRef=eventById.get(note.eventId)||ctx.event;
+    if(!eventHasEnded(eventRef,today)) return;
+    const rating=Number(note.rating);
+    if(Number.isFinite(rating)){
+      ctx.stats.ratingSum+=rating;
+      ctx.stats.ratingCount+=1;
+      totals.ratingSum+=rating;
+      totals.ratingCount+=1;
+      totals.ratedEvents.add(note.eventId);
+      totals.ratings.push({rating,note,event:eventRef});
+    }
+  });
+
+  (store.data.vendors||[]).forEach(vendor=>{
+    const entry=ensureVendorEntry(vendor);
+    const links=Array.isArray(vendor?.events)?vendor.events.filter(id=>scopedIds.has(id)):[];
+    if(!links.length) return;
+    links.forEach(id=>{
+      const ctx=map.get(id);
+      const alreadyCounted=entry?.eventSet.has(id);
+      if(entry){
+        entry.eventSet.add(id);
+      }
+      if(ctx){
+        ctx.vendors.push(vendor);
+        if(entry && !alreadyCounted){
+          const eventRef=eventById.get(id)||ctx.event;
+          if(eventRef){
+            entry.stats.statuses.add(eventRef.status||"");
+          }
+          entry.stats.tasksTotal+=ctx.stats.tasksTotal;
+          entry.stats.tasksCompleted+=ctx.stats.tasksCompleted;
+          entry.stats.tasksOutstanding+=ctx.stats.tasksOutstanding;
+          entry.stats.tasksOverdue+=ctx.stats.tasksOverdue;
+          entry.stats.budgetForecast+=ctx.stats.budgetForecast;
+          entry.stats.budgetActual+=ctx.stats.budgetActual;
+          entry.stats.budgetVariance+=ctx.stats.budgetVariance;
+          entry.stats.poiCount+=ctx.stats.poiCount;
+          entry.stats.timelineCount+=ctx.timeline.length;
+          ctx.stats.overdueTasks.forEach(detail=>{
+            if(detail?.task){
+              entry.overdueDetails.push({eventId:id,eventTitle:ctx.event.title||"",task:detail.task});
+            }
+          });
+          if(ctx.stats.nextTimeline){
+            const startStr=ctx.stats.nextTimeline.start||"";
+            const startDate=parseLocal(startStr);
+            if(startDate){
+              const ts=startDate.getTime();
+              if(Number.isFinite(ts) && ts < entry.stats.nextMilestoneTime){
+                entry.stats.nextMilestoneTime=ts;
+                entry.stats.nextMilestone={
+                  eventId:id,
+                  eventTitle:ctx.event.title||"",
+                  title:ctx.stats.nextTimeline.title||"",
+                  start:ctx.stats.nextTimeline.start||"",
+                  lane:ctx.stats.nextTimeline.lane||""
+                };
+              }
+            }else if(!entry.stats.nextMilestone){
+              entry.stats.nextMilestone={
+                eventId:id,
+                eventTitle:ctx.event.title||"",
+                title:ctx.stats.nextTimeline.title||"",
+                start:ctx.stats.nextTimeline.start||"",
+                lane:ctx.stats.nextTimeline.lane||""
+              };
+            }
+          }
+        }
+      }
+    });
+  });
+
+  (store.data.pois||[]).forEach(poi=>{
+    if(!poi.eventId) return;
+    if(!scopedIds.has(poi.eventId)) return;
+    const ctx=map.get(poi.eventId);
+    if(ctx){
+      ctx.pois.push(poi);
+    }
+  });
+
+  map.forEach(ctx=>{
+    ctx.stats.tasksOutstanding=Math.max(ctx.stats.tasksTotal-ctx.stats.tasksCompleted,0);
+    ctx.stats.budgetVariance=ctx.stats.budgetActual-ctx.stats.budgetForecast;
+    if(ctx.stats.ratingCount>0){
+      ctx.stats.avgRating=ctx.stats.ratingSum/ctx.stats.ratingCount;
+    }
+    ctx.stats.vendorCount=ctx.vendors.length;
+    ctx.stats.poiCount=ctx.pois.length;
+    ctx.stats.overdueTasks.sort((a,b)=>((a.task.dueDate||"").localeCompare(b.task.dueDate||"")));
+    const upcoming=ctx.timeline
+      .map(slot=>{const start=parseLocal(slot.start)||parseLocal(slot.end); return {slot,startTime:start?start.getTime():NaN};})
+      .filter(item=>Number.isFinite(item.startTime))
+      .sort((a,b)=>a.startTime-b.startTime)
+      .find(item=>item.startTime>=now.getTime());
+    if(upcoming){
+      ctx.stats.nextTimeline={title:upcoming.slot.title||"", start:upcoming.slot.start||"", lane:upcoming.slot.lane||""};
+    }
+  });
+
+  vendorInsights.forEach(entry=>{
+    entry.stats.eventCount=entry.eventSet.size;
+    entry.events=Array.from(entry.eventSet).map(id=>eventById.get(id)).filter(Boolean);
+    entry.stats.statuses=Array.from(entry.stats.statuses).filter(Boolean);
+    if(entry.stats.tasksTotal>0){
+      entry.stats.tasksCompletion=Math.round((entry.stats.tasksCompleted/entry.stats.tasksTotal)*100);
+    }else if(entry.stats.eventCount>0 && entry.stats.tasksOutstanding===0){
+      entry.stats.tasksCompletion=100;
+    }else{
+      entry.stats.tasksCompletion=0;
+    }
+    if(!Number.isFinite(entry.stats.nextMilestoneTime) && !entry.stats.nextMilestone){
+      entry.stats.nextMilestone=null;
+    }
+    entry.overdueDetails.sort((a,b)=>((a.task?.dueDate||"").localeCompare(b.task?.dueDate||"")));
+    delete entry.stats.nextMilestoneTime;
+  });
+
+  totals.overdueTasks.sort((a,b)=>((a.task.dueDate||"").localeCompare(b.task.dueDate||"")));
+  totals.upcomingEvents=events
+    .filter(ev=>ev.eventDate && !isBefore(ev.eventDate,today))
+    .sort((a,b)=>(a.eventDate||"").localeCompare(b.eventDate||""));
+  totals.ratingAverage=totals.ratingCount?totals.ratingSum/totals.ratingCount:null;
+  totals.budgetVariance=totals.budgetActual-totals.budgetForecast;
+  totals.tasksCompletion=totals.tasksTotal?Math.round((totals.tasksCompleted/totals.tasksTotal)*100):0;
+
+  return {events,map,totals,scopedIds,eventById,today,now,vendorInsights};
 }
 
 
@@ -1358,38 +1652,26 @@ function showKpiDetail(key){
   updateKpiAria(key);
 }
 
-function renderKPIs(){
+function renderKPIs(graph=state.graph){
   const elU=qs("#kpiUpcoming"), elC=qs("#kpiCompletion"), elO=qs("#kpiOverdue"), elR=qs("#kpiRating");
   const summaryU=qs("#kpiUpcomingSummary"), summaryC=qs("#kpiCompletionSummary"), summaryO=qs("#kpiOverdueSummary"), summaryR=qs("#kpiRatingSummary");
   if(!(elU&&elC&&elO&&elR&&summaryU&&summaryC&&summaryO&&summaryR)) return;
-  const today=todayYMD();
-  const evs=filteredEvents();
-  const eventIds=new Set(evs.map(e=>e.id));
-  const allEventsById=new Map(store.data.events.map(e=>[e.id,e]));
-  const tasks=(store.data.tasks||[]).filter(t=>eventIds.has(t.eventId));
-  const notes=(store.data.notes||[]).filter(n=>eventIds.has(n.eventId));
-  const upcomingList=evs.filter(e=>e.eventDate && !isBefore(e.eventDate, today)).sort((a,b)=>(a.eventDate||"").localeCompare(b.eventDate||""));
-  const upcoming=upcomingList.length;
-  const totalTasks=tasks.length;
-  const completed=tasks.filter(t=>t.status==="Completed").length;
-  const overdueTasks=tasks.filter(t=>t.status!=="Completed" && t.dueDate && isBefore(t.dueDate, today)).sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""));
-  const overdue=overdueTasks.length;
-  const completion=totalTasks ? Math.round((completed/totalTasks)*100) : 0;
-  const ratingsData = notes.map(n=>{
-    const ev=allEventsById.get(n.eventId);
-    if(!eventHasEnded(ev,today)) return null;
-    const r=Number(n.rating);
-    if(!Number.isFinite(r)) return null;
-    return {rating:r,eventId:n.eventId,note:n};
-  }).filter(Boolean);
-  const ratings = ratingsData.map(r=>r.rating);
-  const ratedEvents=new Set(ratingsData.map(r=>r.eventId));
-  const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length) : 0;
+  if(!graph) return;
 
-  elU.textContent=String(upcoming);
+  const {totals,map,eventById}=graph;
+  const upcomingList=totals.upcomingEvents||[];
+  const totalTasks=totals.tasksTotal||0;
+  const completed=totals.tasksCompleted||0;
+  const overdueTasks=totals.overdueTasks||[];
+  const completion=totals.tasksCompletion||0;
+  const ratingsData=totals.ratings||[];
+  const ratedEventsCount=totals.ratedEvents instanceof Set ? totals.ratedEvents.size : 0;
+  const avg=totals.ratingAverage||0;
+
+  elU.textContent=String(upcomingList.length);
   elC.textContent=`${completion}%`;
-  elO.textContent=String(overdue);
-  elR.textContent=avg.toFixed(2);
+  elO.textContent=String(overdueTasks.length);
+  elR.textContent=ratingsData.length?avg.toFixed(2):"0.00";
 
   const detailMap={};
 
@@ -1399,7 +1681,7 @@ function renderKPIs(){
     summaryU.textContent=next.eventDate?`Next: ${nextTitle} • ${fmtDate(next.eventDate)}`:`Next: ${nextTitle}`;
     detailMap.upcoming={
       title:"Upcoming Events",
-      intro:`${upcoming} upcoming event${upcoming===1?"":"s"} in scope.`,
+      intro:`${upcomingList.length} upcoming event${upcomingList.length===1?"":"s"} in scope.`,
       items:upcomingList.slice(0,8).map(ev=>{
         const title=(ev.title||"Untitled event").trim()||"Untitled event";
         const secondary=ev.eventDate?fmtDate(ev.eventDate):"Date TBD";
@@ -1423,13 +1705,22 @@ function renderKPIs(){
     summaryC.textContent="No tasks yet";
     detailMap.completion={ title:"Tasks Completion", intro:"No tasks recorded yet." };
   }else{
-    const remaining=totalTasks-completed;
+    const remaining=Math.max(totalTasks-completed,0);
     summaryC.textContent=remaining>0?`${completed} done · ${remaining} left`:`All ${totalTasks} done`;
-    const statusCounts=tasks.reduce((acc,t)=>{
-      const status=(t.status||"Not Started").trim()||"Not Started";
-      acc[status]=(acc[status]||0)+1;
-      return acc;
-    },{});
+    const statusCounts={};
+    const firstDueByStatus={};
+    map.forEach(ctx=>{
+      ctx.tasks.forEach(task=>{
+        const status=(task.status||"Not Started").trim()||"Not Started";
+        statusCounts[status]=(statusCounts[status]||0)+1;
+        if((task.status||"").trim()==="Completed") return;
+        if(!task.dueDate) return;
+        const existing=firstDueByStatus[status];
+        if(!existing || (task.dueDate||"")<(existing.dueDate||"")){
+          firstDueByStatus[status]=task;
+        }
+      });
+    });
     const order=["In Progress","Not Started","Completed"];
     const statusItems=Object.entries(statusCounts)
       .sort((a,b)=>{
@@ -1439,14 +1730,12 @@ function renderKPIs(){
       })
       .map(([status,count])=>{
         const normalized=status||"Not Started";
-        const dueTask=tasks
-          .filter(t=>(t.status||"Not Started").trim()===normalized && t.status!=="Completed" && t.dueDate)
-          .sort((a,b)=>(a.dueDate||"").localeCompare(b.dueDate||""))[0];
+        const dueTask=firstDueByStatus[status];
         const meta=dueTask?`Next due: ${fmtDate(dueTask.dueDate)}`:null;
         return {
           primary:normalized,
           secondary:`${count} task${count===1?"":"s"}`,
-          meta:meta
+          meta
         };
       });
     detailMap.completion={
@@ -1457,8 +1746,9 @@ function renderKPIs(){
   }
 
   if(overdueTasks.length){
-    const overdueItems=overdueTasks.map(task=>{
-      const ev=allEventsById.get(task.eventId);
+    const overdueItems=overdueTasks.map(entry=>{
+      const task=entry.task;
+      const ev=entry.event || eventById.get(task.eventId);
       const owner=(task.assignedTo||"Unassigned").trim()||"Unassigned";
       const eventTitle=(ev?.title||"Unknown event").trim()||"Unknown event";
       const taskTitle=(task.title||"Task").trim()||"Task";
@@ -1477,34 +1767,34 @@ function renderKPIs(){
     summaryO.setAttribute("aria-label", summaryText);
     detailMap.overdue={
       title:"Overdue Tasks",
-      intro:`${overdue} overdue task${overdue===1?"":"s"}.`,
+      intro:`${overdueTasks.length} task${overdueTasks.length===1?" is":"s are"} overdue. Focus on these next.`,
       items:overdueItems
     };
   }else{
-    summaryO.textContent="All caught up";
+    summaryO.textContent="No overdue tasks";
     summaryO.removeAttribute("title");
     summaryO.removeAttribute("aria-label");
-    detailMap.overdue={ title:"Overdue Tasks", intro:"No overdue tasks. Great job!" };
+    detailMap.overdue={ title:"Overdue Tasks", intro:"No overdue tasks!" };
   }
 
-  if(ratings.length){
-    const ratedItems=ratingsData.map(({rating,eventId,note})=>{
-      const ev=allEventsById.get(eventId);
+  if(ratingsData.length){
+    const ratedItems=ratingsData.map(({rating,note,event})=>{
+      const ev=event || eventById.get(note?.eventId);
       const title=(ev?.title||"Untitled event").trim()||"Untitled event";
       const metaParts=[];
+      if(note?.comment) metaParts.push(note.comment);
       if(ev?.eventDate) metaParts.push(fmtDate(ev.eventDate));
-      const comment=(note?.comment||"").trim();
-      if(comment) metaParts.push(comment);
+      if(ev?.eventType) metaParts.push(ev.eventType);
       return {
         primary:title,
-        secondary:`Rating: ${rating.toFixed(1)}`,
+        secondary:`Rating: ${Number(rating).toFixed(1)}`,
         meta:metaParts.join(" • ")||null
       };
     });
-    summaryR.textContent=`Rated events: ${ratedEvents.size}`;
+    summaryR.textContent=`Rated events: ${ratedEventsCount}`;
     detailMap.rating={
       title:"Average Rating",
-      intro:`Average score ${avg.toFixed(2)} from ${ratings.length} review${ratings.length===1?"":"s"}.`,
+      intro:`Average score ${avg.toFixed(2)} from ${ratingsData.length} review${ratingsData.length===1?"":"s"}.`,
       items:ratedItems
     };
   }else{
@@ -1571,6 +1861,37 @@ function fillEventSelectors(){
     });
   });
 
+  const vendorMulti=qs("#vEvents");
+  if(vendorMulti){
+    const keep=new Set(Array.from(vendorMulti.selectedOptions||[]).map(opt=>opt.value));
+    vendorMulti.innerHTML="";
+    evsAll.forEach(e=>{
+      const o=document.createElement("option");
+      o.value=e.id;
+      o.textContent=e.title;
+      if(keep.has(e.id)) o.selected=true;
+      vendorMulti.appendChild(o);
+    });
+  }
+
+  const poiEvent=qs("#pEvent");
+  if(poiEvent){
+    const keep=poiEvent.value || "";
+    poiEvent.innerHTML="";
+    const none=document.createElement("option");
+    none.value="";
+    none.textContent="General (no specific event)";
+    if(!keep) none.selected=true;
+    poiEvent.appendChild(none);
+    evsAll.forEach(e=>{
+      const o=document.createElement("option");
+      o.value=e.id;
+      o.textContent=e.title;
+      if(e.id===keep) o.selected=true;
+      poiEvent.appendChild(o);
+    });
+  }
+
   // Post-Event selector: only events that have ended (by date) or are marked Completed
   const ended = evsAll.filter(e=>eventHasEnded(e));
   const nSel = qs("#nEvent");
@@ -1588,10 +1909,11 @@ function fillEventSelectors(){
 }
 
 /* ---------- Dashboard tables ---------- */
-function renderDashEvents(){
+function renderDashEvents(graph=state.graph){
   const tbody=qs("#tblDashEvents tbody"); if(!tbody) return; tbody.innerHTML="";
   const frag=fragment();
-  filteredEvents().slice(0,12).forEach(e=>{
+  const events=(graph?.events||filteredEvents()).slice(0,12);
+  events.forEach(e=>{
     const tr=document.createElement("tr");
     tr.innerHTML=`<td>${e.title}</td><td>${e.eventType}</td><td>${fmtDate(e.eventDate)}</td><td>${e.address||""}</td><td><span class="status ${e.status==='Planning'?'s-planning':e.status==='Executing'?'s-executing':'s-completed'}">${e.status}</span></td><td>${e.owner||""}</td>`;
     frag.appendChild(tr);
@@ -1599,14 +1921,27 @@ function renderDashEvents(){
   tbody.appendChild(frag);
 }
 function isTaskOverdue(t){ if(t.status==="Completed"||!t.dueDate) return false; return isBefore(t.dueDate, todayYMD()) }
-function renderDashTasks(){
+function renderDashTasks(graph=state.graph){
   const tbody=qs("#tblDashTasks tbody"); if(!tbody) return; tbody.innerHTML="";
-  const fIds = new Set(filteredEvents().map(e=>e.id));
-  const tasks = store.data.tasks.filter(t=>fIds.has(t.eventId) && t.status!=="Completed")
-    .sort((a,b)=>(a.dueDate||"9999-12-31").localeCompare(b.dueDate||"9999-12-31")).slice(0,12);
+  const rows=[];
+  if(graph){
+    graph.map.forEach(ctx=>{
+      ctx.tasks.forEach(task=>{
+        if((task.status||"").trim()!=="Completed"){ rows.push({task,event:ctx.event}); }
+      });
+    });
+  }else{
+    const fIds=new Set(filteredEvents().map(e=>e.id));
+    store.data.tasks.filter(t=>fIds.has(t.eventId) && t.status!=="Completed").forEach(task=>{
+      const ev=store.data.events.find(e=>e.id===task.eventId) || null;
+      rows.push({task,event:ev});
+    });
+  }
+  const tasks=rows
+    .sort((a,b)=>((a.task.dueDate||"9999-12-31").localeCompare(b.task.dueDate||"9999-12-31")))
+    .slice(0,12);
   const frag=fragment();
-  tasks.forEach(t=>{
-    const ev=store.data.events.find(e=>e.id===t.eventId);
+  tasks.forEach(({task:t,event:ev})=>{
     const overdue=isTaskOverdue(t);
     const stClass=t.status==="Completed"?"s-completed":t.status==="In Progress"?"s-executing":overdue?"s-overdue":"";
     const tr=document.createElement("tr");
@@ -1616,48 +1951,343 @@ function renderDashTasks(){
   tbody.appendChild(frag);
 }
 
-/* ---------- Events table & form actions ---------- */
-function renderEventsTable(){
-  const list=qs("#eventCards"); if(!list) return; list.innerHTML="";
-  const events=filteredEvents();
-  const tasksByEvent=new Map();
-  (store.data.tasks||[]).forEach(t=>{
-    if(!t.eventId) return;
-    const agg=tasksByEvent.get(t.eventId)||{total:0,completed:0};
-    agg.total+=1;
-    if(t.status==="Completed") agg.completed+=1;
-    tasksByEvent.set(t.eventId,agg);
-  });
+function renderRelationshipInsights(graph=state.graph){
+  const container=qs('#relationshipInsights');
+  if(!container) return;
+  container.innerHTML='';
+  if(!graph){
+    return;
+  }
 
+  const frag=fragment();
+  const vendorEntries=Array.from((graph.vendorInsights||new Map()).values());
+  const eventContexts=Array.from(graph.map?.values()||[]);
+
+  const budgetCard=document.createElement('div');
+  budgetCard.className='card insight-card';
+  budgetCard.innerHTML='<h3>Budget Snapshot</h3>';
+
+  const totals=graph.totals||{};
+  const totalForecast=totals.budgetForecast||0;
+  const totalActual=totals.budgetActual||0;
+  const totalVariance=totals.budgetVariance||0;
+  const varianceSummary=totalVariance===0
+    ? 'On track'
+    : `${totalVariance>0?'Over':'Under'} by ${fmtMoney(Math.abs(totalVariance))}`;
+
+  const budgetedEvents=eventContexts.filter(ctx=>ctx.stats?.hasBudget);
+  if(budgetedEvents.length){
+    const summary=document.createElement('div');
+    summary.className='insight-subtitle';
+    summary.textContent=`${fmtMoney(totalActual)} actual of ${fmtMoney(totalForecast)} forecast • ${varianceSummary}`;
+    budgetCard.appendChild(summary);
+
+    const topBudget=budgetedEvents
+      .slice()
+      .sort((a,b)=>{
+        const varA=Math.abs(a.stats?.budgetVariance||0);
+        const varB=Math.abs(b.stats?.budgetVariance||0);
+        if(varB!==varA) return varB-varA;
+        return (b.stats?.budgetActual||0)-(a.stats?.budgetActual||0);
+      })
+      .slice(0,3);
+
+    if(topBudget.length){
+      const list=document.createElement('ul');
+      list.className='insight-list';
+      topBudget.forEach(ctx=>{
+        const stats=ctx.stats||{};
+        const event=ctx.event;
+        const variance=stats.budgetVariance||0;
+        const varianceLabel=variance===0
+          ? 'On track'
+          : `${variance>0?'Over':'Under'} by ${fmtMoney(Math.abs(variance))}`;
+        const chips=[
+          `${fmtMoney(stats.budgetActual||0)} actual`,
+          `${fmtMoney(stats.budgetForecast||0)} forecast`
+        ];
+        const forecastValue=Math.abs(stats.budgetForecast||0);
+        if(forecastValue>0){
+          const pct=Math.round(Math.abs(stats.budgetActual||0)/forecastValue*100);
+          if(Number.isFinite(pct)) chips.push(`${pct}% spent`);
+        }
+        const chipsMarkup=chips.length
+          ? `<div class="insight-chips">${chips.map(c=>`<span class="insight-chip">${c}</span>`).join('')}</div>`
+          : '';
+        const li=document.createElement('li');
+        li.className='insight-item';
+        li.innerHTML=`<div class="insight-title">${event?.title||'Untitled event'}</div>`+
+          `<div class="insight-subtitle">${varianceLabel}</div>`+
+          chipsMarkup;
+        list.appendChild(li);
+      });
+      budgetCard.appendChild(list);
+    }
+  }else{
+    const empty=document.createElement('p');
+    empty.className='insight-empty';
+    empty.textContent='Add budget lines to compare forecast vs actual spend.';
+    budgetCard.appendChild(empty);
+  }
+  frag.appendChild(budgetCard);
+
+  const vendorCard=document.createElement('div');
+  vendorCard.className='card insight-card';
+  vendorCard.innerHTML='<h3>Vendor Workload</h3>';
+  if(vendorEntries.length){
+    const topVendors=vendorEntries
+      .filter(entry=>entry.stats?.eventCount>0)
+      .sort((a,b)=>{
+        const outstanding=(b.stats?.tasksOutstanding||0)-(a.stats?.tasksOutstanding||0);
+        if(outstanding) return outstanding;
+        const overdue=(b.stats?.tasksOverdue||0)-(a.stats?.tasksOverdue||0);
+        if(overdue) return overdue;
+        return (b.stats?.eventCount||0)-(a.stats?.eventCount||0);
+      })
+      .slice(0,3);
+    if(topVendors.length){
+      const list=document.createElement('ul');
+      list.className='insight-list';
+      topVendors.forEach(entry=>{
+        const stats=entry.stats||{};
+        const events=entry.events?.map(ev=>ev?.title).filter(Boolean)||[];
+        const chips=[];
+        if(typeof stats.eventCount==='number'){
+          chips.push(`${stats.eventCount} event${stats.eventCount===1?'':'s'}`);
+        }
+        if((stats.tasksOutstanding||0)>0){
+          chips.push(`${stats.tasksOutstanding} open task${stats.tasksOutstanding===1?'':'s'}`);
+        }else if((stats.tasksTotal||0)>0){
+          chips.push('All tasks complete');
+        }
+        if((stats.tasksOverdue||0)>0){
+          chips.push(`${stats.tasksOverdue} overdue`);
+        }
+        if((stats.tasksTotal||0)>0){
+          chips.push(`${stats.tasksCompletion||0}% complete`);
+        }
+        if(stats.budgetVariance){
+          chips.push(`${stats.budgetVariance>0?'Over':'Under'} by ${fmtMoney(Math.abs(stats.budgetVariance))}`);
+        }
+        const chipsMarkup=chips.length?`<div class="insight-chips">${chips.map(c=>`<span class="insight-chip">${c}</span>`).join('')}</div>`:'';
+        const statuses=(stats.statuses||[]).filter(Boolean);
+        const metaItems=[];
+        if(statuses.length){
+          metaItems.push(`<div class="insight-meta">Status: ${statuses.join(' • ')}</div>`);
+        }
+        const next=stats.nextMilestone;
+        if(next){
+          metaItems.push(`<div class="insight-meta">Next: ${next.title||'Milestone'} • ${fmtDateTime(next.start)||'Date TBD'}${next.eventTitle?` (${next.eventTitle})`:''}</div>`);
+        }else if(stats.eventCount){
+          metaItems.push('<div class="insight-meta">No upcoming milestones recorded</div>');
+        }
+        const overdueDetail=entry.overdueDetails?.[0];
+        if(overdueDetail){
+          const title=overdueDetail.task?.title||'Task';
+          const eventTitle=overdueDetail.eventTitle?` (${overdueDetail.eventTitle})`:'';
+          metaItems.push(`<div class="insight-meta">Overdue: ${title}${eventTitle}</div>`);
+        }
+        const metaLines=metaItems.join('');
+        const li=document.createElement('li');
+        li.className='insight-item';
+        li.innerHTML=`<div class="insight-title">${entry.vendor?.name||'Untitled vendor'}</div>
+          <div class="insight-subtitle">${events.length?events.join(' • '):'No scoped events'}</div>
+          ${chipsMarkup}
+          ${metaLines}`;
+        list.appendChild(li);
+      });
+      vendorCard.appendChild(list);
+    }else{
+      const empty=document.createElement('p');
+      empty.className='insight-empty';
+      empty.textContent='Link vendors to scoped events to analyse workload.';
+      vendorCard.appendChild(empty);
+    }
+  }else{
+    const empty=document.createElement('p');
+    empty.className='insight-empty';
+    empty.textContent='Add vendors to surface workload insights.';
+    vendorCard.appendChild(empty);
+  }
+  frag.appendChild(vendorCard);
+
+  const watchCard=document.createElement('div');
+  watchCard.className='card insight-card';
+  watchCard.innerHTML='<h3>Event Watchlist</h3>';
+  const watch=eventContexts
+    .map(ctx=>{
+      const issues=[];
+      let score=0;
+      const overdue=ctx.stats?.tasksOverdue||0;
+      const outstanding=ctx.stats?.tasksOutstanding||0;
+      const overspend=Math.max(0,(ctx.stats?.budgetVariance)||0);
+      if(overdue>0){
+        issues.push(`${overdue} overdue task${overdue===1?'':'s'}`);
+        score+=overdue*5;
+      }
+      if(overspend>0){
+        issues.push(`Over budget ${fmtMoney(overspend)}`);
+        score+=Math.round(overspend/1000)+2;
+      }
+      if((ctx.stats?.vendorCount||0)===0 && (ctx.stats?.tasksTotal||0)>0){
+        issues.push('No vendors linked');
+        score+=3;
+      }
+      if(outstanding>0 && (ctx.stats?.tasksCompleted||0)===0){
+        issues.push('Work not started');
+        score+=1;
+      }
+      return {ctx,issues,score};
+    })
+    .filter(item=>item.issues.length)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,3);
+  if(watch.length){
+    const list=document.createElement('ul');
+    list.className='insight-list';
+    watch.forEach(({ctx,issues})=>{
+      const stats=ctx.stats||{};
+      const chips=[];
+      if((stats.tasksOutstanding||0)>0){
+        chips.push(`${stats.tasksOutstanding} open`);
+      }
+      if((stats.tasksOverdue||0)>0){
+        chips.push(`${stats.tasksOverdue} overdue`);
+      }
+      chips.push((stats.vendorCount||0)>0
+        ? `${stats.vendorCount} vendor${stats.vendorCount===1?'':'s'}`
+        : 'No vendors');
+      if(stats.budgetVariance){
+        chips.push(`${stats.budgetVariance>0?'Over':'Under'} by ${fmtMoney(Math.abs(stats.budgetVariance))}`);
+      }
+      if((stats.poiCount||0)>0){
+        chips.push(`${stats.poiCount} POI${stats.poiCount===1?'':'s'}`);
+      }
+      const chipsMarkup=chips.length?`<div class="insight-chips">${chips.map(c=>`<span class="insight-chip">${c}</span>`).join('')}</div>`:'';
+      const statusLine=ctx.event?.status?`Status: ${ctx.event.status}`:'';
+      const timeline=stats.nextTimeline
+        ? `Next timeline: ${stats.nextTimeline.title||'Milestone'} • ${fmtDateTime(stats.nextTimeline.start)||'Date TBD'}`
+        : 'No upcoming timeline slot';
+      const metaLines=[statusLine,timeline].filter(Boolean)
+        .map(text=>`<div class="insight-meta">${text}</div>`).join('');
+      const li=document.createElement('li');
+      li.className='insight-item';
+      li.innerHTML=`<div class="insight-title">${ctx.event?.title||'Untitled event'}</div>
+        <div class="insight-subtitle">${issues.join(' • ')}</div>
+        ${chipsMarkup}
+        ${metaLines}`;
+      list.appendChild(li);
+    });
+    watchCard.appendChild(list);
+  }else{
+    const empty=document.createElement('p');
+    empty.className='insight-empty';
+    empty.textContent='All scoped events look healthy.';
+    watchCard.appendChild(empty);
+  }
+  frag.appendChild(watchCard);
+
+  const sharedCard=document.createElement('div');
+  sharedCard.className='card insight-card';
+  sharedCard.innerHTML='<h3>Shared Coverage</h3>';
+  const sharedVendors=vendorEntries.filter(entry=>(entry.stats?.eventCount||0)>1);
+  const unstaffedEvents=eventContexts.filter(ctx=>(ctx.stats?.vendorCount||0)===0);
+  const noPoiEvents=eventContexts.filter(ctx=>(ctx.stats?.poiCount||0)===0);
+  const timelineGaps=eventContexts.filter(ctx=>(ctx.timeline||[]).length===0);
+  const sharedList=document.createElement('ul');
+  sharedList.className='insight-list';
+  const sharedVendorNames=sharedVendors.slice(0,3).map(entry=>entry.vendor?.name||'Unnamed').join(' • ');
+  const unstaffedNames=unstaffedEvents.slice(0,3).map(ctx=>ctx.event?.title||'Untitled event').join(' • ');
+  const noPoiNames=noPoiEvents.slice(0,3).map(ctx=>ctx.event?.title||'Untitled event').join(' • ');
+  const timelineNames=timelineGaps.slice(0,3).map(ctx=>ctx.event?.title||'Untitled event').join(' • ');
+  sharedList.innerHTML=`
+    <li class="insight-item">
+      <div class="insight-title">${sharedVendors.length} vendor${sharedVendors.length===1?'':'s'} shared across events</div>
+      <div class="insight-meta">${sharedVendorNames || 'Link vendors to multiple events to surface dependencies.'}</div>
+    </li>
+    <li class="insight-item">
+      <div class="insight-title">${unstaffedEvents.length} event${unstaffedEvents.length===1?'':'s'} without vendor coverage</div>
+      <div class="insight-meta">${unstaffedNames || 'All scoped events have at least one vendor.'}</div>
+    </li>
+    <li class="insight-item">
+      <div class="insight-title">${noPoiEvents.length} event${noPoiEvents.length===1?'':'s'} missing POIs</div>
+      <div class="insight-meta">${noPoiNames || 'All scoped events have POIs set.'}</div>
+    </li>
+    <li class="insight-item">
+      <div class="insight-title">${timelineGaps.length} event${timelineGaps.length===1?'':'s'} without timeline slots</div>
+      <div class="insight-meta">${timelineNames || 'All scoped events include at least one run-of-show slot.'}</div>
+    </li>`;
+  sharedCard.appendChild(sharedList);
+  frag.appendChild(sharedCard);
+
+  container.appendChild(frag);
+}
+
+/* ---------- Events table & form actions ---------- */
+function renderEventsTable(graph=state.graph){
+  const list=qs("#eventCards"); if(!list) return; list.innerHTML="";
+  const events=(graph?.events||filteredEvents());
   const displayData=[];
-  let totalTasks=0;
-  let totalCompleted=0;
 
   events.forEach(e=>{
-    const agg=tasksByEvent.get(e.id)||{total:0,completed:0};
-    const outstanding=Math.max(agg.total-agg.completed,0);
-    const hideCompleted=e.status==="Completed" && outstanding===0;
-    if(hideCompleted){
-      return;
-    }
+    const ctx=graph?.map?.get(e.id);
+    const stats=ctx?.stats||{};
+    const tasksTotal=stats.tasksTotal||0;
+    const tasksCompleted=stats.tasksCompleted||0;
+    const outstanding=stats.tasksOutstanding!=null?stats.tasksOutstanding:Math.max(tasksTotal-tasksCompleted,0);
+    const hideCompleted=(e.status==="Completed") && outstanding===0;
+    if(hideCompleted) return;
 
-    totalTasks+=agg.total;
-    totalCompleted+=agg.completed;
-
-    const percent=agg.total?Math.round((agg.completed/agg.total)*100):0;
+    const percent=tasksTotal?Math.round((tasksCompleted/tasksTotal)*100):0;
     const statusClass=e.status==='Completed'?'s-completed':e.status==='Executing'?'s-executing':'s-planning';
-    const taskSummary=agg.total?`${agg.completed} of ${agg.total} tasks completed`:"No tasks yet";
+    const taskSummary=tasksTotal?`${tasksCompleted} of ${tasksTotal} tasks completed`:`No tasks yet`;
     const metaParts=[];
     if(e.eventDate) metaParts.push(fmtDate(e.eventDate));
     if(e.eventType) metaParts.push(e.eventType);
-    const metaLine=metaParts.length?metaParts.join(" · "):"Details TBD";
+    const metaLine=metaParts.length?metaParts.join(' · '):'Details TBD';
+
+    const insightLines=[];
+    if(ctx?.stats?.hasBudget){
+      const variance=ctx.stats.budgetVariance||0;
+      const varianceLabel=variance>0?`+${fmtMoney(variance)}`:fmtMoney(variance);
+      insightLines.push(`Budget ${fmtMoney(ctx.stats.budgetActual)} / ${fmtMoney(ctx.stats.budgetForecast)} (${varianceLabel} variance)`);
+    }
+    if(ctx?.stats?.nextTimeline){
+      const next=ctx.stats.nextTimeline;
+      const when=next.start?fmtDateTime(next.start):'Scheduled';
+      const title=next.title||'TBD';
+      insightLines.push(`Next milestone: ${when} • ${title}`);
+    }
+    if(Number.isFinite(ctx?.stats?.avgRating)){
+      insightLines.push(`Avg rating: ${ctx.stats.avgRating.toFixed(1)} (${ctx.stats.ratingCount})`);
+    }
+    if(ctx?.vendors?.length){
+      insightLines.push(`${ctx.vendors.length} vendor${ctx.vendors.length===1?'':'s'} assigned`);
+    }
+    if(ctx?.pois?.length){
+      insightLines.push(`${ctx.pois.length} POI${ctx.pois.length===1?'':'s'} nearby`);
+    }
+
+    const relationChips=[];
+    if(outstanding>0) relationChips.push(`${outstanding} open task${outstanding===1?'':'s'}`);
+    if((ctx?.stats?.tasksOverdue||0)>0) relationChips.push(`${ctx.stats.tasksOverdue} overdue`);
+    if(ctx?.stats?.hasBudget){
+      const variance=ctx.stats.budgetVariance||0;
+      if(variance>0) relationChips.push(`+${fmtMoney(variance)} variance`);
+      if(variance<0) relationChips.push(`${fmtMoney(variance)} variance`);
+    }
+    if((ctx?.stats?.vendorCount||0)>0){
+      relationChips.push(`${ctx.stats.vendorCount} vendor${ctx.stats.vendorCount===1?'':'s'}`);
+    }
 
     displayData.push({
       event:e,
       percent,
       statusClass,
       taskSummary,
-      metaLine
+      metaLine,
+      insightLines,
+      relationChips
     });
   });
 
@@ -1667,19 +2297,19 @@ function renderEventsTable(){
 
   const frag=fragment();
 
-  displayData.forEach(({event:e, percent, statusClass, taskSummary, metaLine})=>{
-    const card=document.createElement("article");
+  displayData.forEach(({event:e, percent, statusClass, taskSummary, metaLine, insightLines, relationChips})=>{
+    const card=document.createElement('article');
     const isEditing=state.editingEventId===e.id;
-    card.className="event-card"+(isEditing?" is-editing":"");
+    card.className='event-card'+(isEditing?' is-editing':'');
     card.dataset.eventId=e.id;
-    card.setAttribute("role","listitem");
+    card.setAttribute('role','listitem');
 
-    const addressHtml=escapeAttr(e.address||"");
+    const addressHtml=escapeAttr(e.address||'');
     const summaryText=escapeAttr(taskSummary);
     const metaHtml=escapeAttr(metaLine);
-    const ownerHtml=e.owner?`<div class="event-meta">Owner: ${escapeAttr(e.owner)}</div>`:"";
-    const titleHtml=escapeAttr(e.title||"Untitled Event");
-    const statusText=escapeAttr(e.status||"");
+    const ownerHtml=e.owner?`<div class="event-meta">Owner: ${escapeAttr(e.owner)}</div>`:'';
+    const titleHtml=escapeAttr(e.title||'Untitled Event');
+    const statusText=escapeAttr(e.status||'');
 
     const progressMarkup=`
       <div class="event-progress">
@@ -1690,15 +2320,15 @@ function renderEventsTable(){
       </div>`;
 
     if(isEditing){
-      const typeOptionsList=["Wedding","Baptism","Party"]; if(e.eventType && !typeOptionsList.includes(e.eventType)) typeOptionsList.push(e.eventType);
-      const statusOptionsList=["Planning","Executing","Completed"]; if(e.status && !statusOptionsList.includes(e.status)) statusOptionsList.push(e.status);
-      const typeOptions=typeOptionsList.map(opt=>`<option value="${escapeAttr(opt)}"${opt===e.eventType?" selected":""}>${escapeAttr(opt)}</option>`).join("");
-      const statusOptions=statusOptionsList.map(opt=>`<option value="${escapeAttr(opt)}"${opt===e.status?" selected":""}>${escapeAttr(opt)}</option>`).join("");
-      const ownerValue=escapeAttr(e.owner||"");
-      const addressValue=escapeAttr(e.address||"");
-      const dateValue=escapeAttr(e.eventDate||"");
-      const latValue=escapeAttr(e.lat??"");
-      const lonValue=escapeAttr(e.lon??"");
+      const typeOptionsList=['Wedding','Baptism','Party']; if(e.eventType && !typeOptionsList.includes(e.eventType)) typeOptionsList.push(e.eventType);
+      const statusOptionsList=['Planning','Executing','Completed']; if(e.status && !statusOptionsList.includes(e.status)) statusOptionsList.push(e.status);
+      const typeOptions=typeOptionsList.map(opt=>`<option value="${escapeAttr(opt)}"${opt===e.eventType?' selected':''}>${escapeAttr(opt)}</option>`).join('');
+      const statusOptions=statusOptionsList.map(opt=>`<option value="${escapeAttr(opt)}"${opt===e.status?' selected':''}>${escapeAttr(opt)}</option>`).join('');
+      const ownerValue=escapeAttr(e.owner||'');
+      const addressValue=escapeAttr(e.address||'');
+      const dateValue=escapeAttr(e.eventDate||'');
+      const latValue=escapeAttr(e.lat??'');
+      const lonValue=escapeAttr(e.lon??'');
 
       card.innerHTML=`
         <div class="event-card-header">
@@ -1727,6 +2357,8 @@ function renderEventsTable(){
           </div>
         </form>`;
     }else{
+      const insightsMarkup=insightLines.length?`<div class="event-insights">${insightLines.map(line=>`<div class="insight-line">${escapeAttr(line)}</div>`).join('')}</div>`:'';
+      const relationsMarkup=relationChips.length?`<div class="event-relations">${relationChips.map(chip=>`<span class="relation-chip">${escapeAttr(chip)}</span>`).join('')}</div>`:'';
       card.innerHTML=`
         <div class="event-card-header">
           <div class="event-card-title">
@@ -1738,8 +2370,10 @@ function renderEventsTable(){
         </div>
         <div class="event-address">${addressHtml}</div>
         ${progressMarkup}
+        ${insightsMarkup}
+        ${relationsMarkup}
         <div class="event-actions no-print">
-          <button class="ghost" title="Edit" onclick="editEvent('${e.id}')"><svg class="icon"><use href="#ic-edit"></use></svg> Edit</button>
+          <button class="ghost" title="Edit" onclick="editEvent('${e.id}')"><svg class="icon"><use href="#ic-edit"></use></svg>Edit</button>
           <button class="danger" title="Delete" onclick="delEvent('${e.id}')"><svg class="icon"><use href="#ic-trash"></use></svg> Delete</button>
         </div>`;
     }
@@ -1750,22 +2384,51 @@ function renderEventsTable(){
   if(displayData.length){
     list.appendChild(frag);
   }else{
-    const empty=document.createElement("div");
-    empty.className="events-empty";
-    empty.innerHTML="No active events. Completed events without remaining tasks appear in the Post-Event tab.";
+    const empty=document.createElement('div');
+    empty.className='events-empty';
+    empty.innerHTML='No active events. Completed events without remaining tasks appear in the Post-Event tab.';
     list.appendChild(empty);
   }
 
-  const globalPercent=totalTasks?Math.round((totalCompleted/totalTasks)*100):0;
-  const globalSummary=totalTasks?`${totalCompleted} of ${totalTasks} tasks completed`:"No tasks yet";
-  const summaryEl=qs("#eventsGlobalProgressSummary"); if(summaryEl) summaryEl.textContent=globalSummary;
-  const percentEl=qs("#eventsGlobalProgressPercent"); if(percentEl) percentEl.textContent=`${globalPercent}%`;
-  const bar=qs("#eventsGlobalProgressBar"); if(bar){
-    bar.setAttribute("aria-valuenow",String(globalPercent));
-    bar.setAttribute("aria-valuetext",globalSummary);
+  if(graph){
+    updateEventsGlobalProgress(graph);
+  }else{
+    updateEventsGlobalProgress();
   }
-  const fill=qs("#eventsGlobalProgressFill"); if(fill) fill.style.width=`${globalPercent}%`;
 }
+
+function updateEventsGlobalProgress(graph=state.graph){
+  const summaryEl=qs('#eventsGlobalProgressSummary');
+  const percentEl=qs('#eventsGlobalProgressPercent');
+  const bar=qs('#eventsGlobalProgressBar');
+  const fill=qs('#eventsGlobalProgressFill');
+
+  let totalTasks=0;
+  let completed=0;
+  let percent=0;
+  if(graph){
+    const totals=graph.totals||{};
+    totalTasks=totals.tasksTotal||0;
+    completed=totals.tasksCompleted||0;
+    percent=totals.tasksCompletion||0;
+  }else{
+    const events=filteredEvents();
+    const ids=new Set(events.map(e=>e.id));
+    const tasks=(store.data.tasks||[]).filter(t=>ids.has(t.eventId));
+    totalTasks=tasks.length;
+    completed=tasks.filter(t=>(t.status||'')==='Completed').length;
+    percent=totalTasks?Math.round((completed/totalTasks)*100):0;
+  }
+  const summary=totalTasks?`${completed} of ${totalTasks} tasks completed`:'No tasks yet';
+  if(summaryEl) summaryEl.textContent=summary;
+  if(percentEl) percentEl.textContent=`${percent}%`;
+  if(bar){
+    bar.setAttribute('aria-valuenow',String(percent));
+    bar.setAttribute('aria-valuetext',summary);
+  }
+  if(fill) fill.style.width=`${percent}%`;
+}
+
 function resetEventForm(){
   ["eId","eTitle","eOwner","eLat","eLon","eAddress"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""});
   if(qs("#eType")) qs("#eType").value="Wedding";
@@ -2008,15 +2671,20 @@ qs("#btnResetEvent")?.addEventListener("click", () => {
 function renderAll(context){
   fillEventSelectors();
   fillEventScope();
-  renderKPIs();
-  renderEventsTable();
-  renderTasksTable();
-  renderKanban();
-  renderVendors();
-  renderBudget();
-  renderTimeline();
-  renderNotesTable();  
-  if((context||"") === "map"){ renderMap() }
+  const events=filteredEvents();
+  state.graph=buildEventGraph(events);
+  renderKPIs(state.graph);
+  renderDashEvents(state.graph);
+  renderDashTasks(state.graph);
+  renderRelationshipInsights(state.graph);
+  renderEventsTable(state.graph);
+  renderTasksTable(state.graph);
+  renderKanban(state.graph);
+  renderVendors(state.graph);
+  renderBudget(state.graph);
+  renderTimeline(state.graph);
+  renderNotesTable(state.graph);
+  if((context||"") === "map"){ renderMap(state.graph) }
 }
 
 /* ---------- Init ---------- */
@@ -2032,36 +2700,61 @@ function completeTask(id){
   t.status="Completed"; t.completedDate=new Date().toISOString();
   store.save(); renderAll("tasks");
 }
-function renderTasksTable(){
-  const tbody=qs("#tblTasks tbody"); if(!tbody) return; tbody.innerHTML="";
-  const fIds=new Set(filteredEvents().map(e=>e.id));
-  const list=store.data.tasks.filter(t=>fIds.has(t.eventId));
+function renderTasksTable(graph=state.graph){
+  const tbody=qs('#tblTasks tbody'); if(!tbody) return; tbody.innerHTML='';
+  const rows=[];
+  if(graph){
+    graph.map.forEach(ctx=>{
+      ctx.tasks.forEach(task=>{ rows.push({task,event:ctx.event}); });
+    });
+  }else{
+    const fIds=new Set(filteredEvents().map(e=>e.id));
+    store.data.tasks.filter(t=>fIds.has(t.eventId)).forEach(task=>{
+      const ev=store.data.events.find(e=>e.id===task.eventId) || null;
+      rows.push({task,event:ev});
+    });
+  }
+  const list=rows.sort((a,b)=>{
+    const aDate=a.task.dueDate||'9999-12-31';
+    const bDate=b.task.dueDate||'9999-12-31';
+    return aDate.localeCompare(bDate);
+  });
   const frag=fragment();
-  list.forEach(t=>{
-    const ev=store.data.events.find(e=>e.id===t.eventId);
+  list.forEach(({task:t,event:ev})=>{
     const overdue=isTaskOverdue(t);
-    const stClass=t.status==="Completed"?"s-completed":t.status==="In Progress"?"s-executing":overdue?"s-overdue":"";
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${t.title}</td><td>${ev?ev.title:""}</td><td>${fmtDate(t.dueDate)}</td><td>${t.assignedTo||""}</td><td><span class="status ${stClass}">${overdue?'Overdue':t.status}</span></td><td class="row no-print"><button class="ghost" title="Complete" onclick="completeTask('${t.id}')"><svg class="icon"><use href="#ic-check"></use></svg></button><button class="ghost" title="Edit" onclick="editTask('${t.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delTask('${t.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
+    const stClass=t.status==='Completed'?'s-completed':t.status==='In Progress'?'s-executing':overdue?'s-overdue':'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${t.title}</td><td>${ev?ev.title:''}</td><td>${fmtDate(t.dueDate)}</td><td>${t.assignedTo||''}</td><td><span class="status ${stClass}">${overdue?'Overdue':t.status}</span></td><td class="row no-print"><button class="ghost" title="Complete" onclick="completeTask('${t.id}')"><svg class="icon"><use href="#ic-check"></use></svg></button><button class="ghost" title="Edit" onclick="editTask('${t.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delTask('${t.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
 }
-function renderKanban(){
-  const cols={ "Not Started":qs("#col-not-started"), "In Progress":qs("#col-in-progress"), "Completed":qs("#col-completed") };
-  Object.values(cols).forEach(c=>c&&(c.innerHTML=""));
-  const fIds=new Set(filteredEvents().map(e=>e.id));
-  const list=store.data.tasks.filter(t=>fIds.has(t.eventId));
-  list.forEach(t=>{
-    const el=document.createElement("div");
-    el.className="ticket"+(isTaskOverdue(t)?" overdue":"");
-    const ev=store.data.events.find(e=>e.id===t.eventId);
-    el.innerHTML=`<strong>${t.title}</strong><div class="meta">${ev?ev.title:""} • ${t.assignedTo||"Unassigned"} • ${fmtDate(t.dueDate)||"No due"}</div><div class="row no-print" style="margin-top:6px"><button class="ghost" title="Complete" onclick="completeTask('${t.id}')"><svg class="icon"><use href="#ic-check"></use></svg></button><button class="ghost" title="Edit" onclick="editTask('${t.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button></div>`;
-    const col=cols[t.status]||cols["Not Started"];
+
+function renderKanban(graph=state.graph){
+  const cols={ 'Not Started':qs('#col-not-started'), 'In Progress':qs('#col-in-progress'), 'Completed':qs('#col-completed') };
+  Object.values(cols).forEach(c=>c&&(c.innerHTML=''));
+  const rows=[];
+  if(graph){
+    graph.map.forEach(ctx=>{
+      ctx.tasks.forEach(task=>{ rows.push({task,event:ctx.event}); });
+    });
+  }else{
+    const fIds=new Set(filteredEvents().map(e=>e.id));
+    store.data.tasks.filter(t=>fIds.has(t.eventId)).forEach(task=>{
+      const ev=store.data.events.find(e=>e.id===task.eventId) || null;
+      rows.push({task,event:ev});
+    });
+  }
+  rows.forEach(({task:t,event:ev})=>{
+    const el=document.createElement('div');
+    el.className='ticket'+(isTaskOverdue(t)?' overdue':'');
+    el.innerHTML=`<strong>${t.title}</strong><div class="meta">${ev?ev.title:''} • ${t.assignedTo||'Unassigned'} • ${fmtDate(t.dueDate)||'No due'}</div><div class="row no-print" style="margin-top:6px"><button class="ghost" title="Complete" onclick="completeTask('${t.id}')"><svg class="icon"><use href="#ic-check"></use></svg></button><button class="ghost" title="Edit" onclick="editTask('${t.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button></div>`;
+    const col=cols[t.status]||cols['Not Started'];
     col && col.appendChild(el);
   });
 }
-function resetTaskForm(){ ["tId","tTitle","tAssigned","tNotes"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""}); if(qs("#tDue")) qs("#tDue").value=""; if(qs("#tStatus")) qs("#tStatus").value="Not Started"; fillEventSelectors() }
+
+function resetTaskForm(){ ["tId","tTitle","tAssigned","tNotes"].forEach(id=>{const el=qs('#'+id); if(el) el.value=''}); if(qs('#tDue')) qs('#tDue').value=''; if(qs('#tStatus')) qs('#tStatus').value='Not Started'; fillEventSelectors() }
 function editTask(id){
   const t=store.data.tasks.find(x=>x.id===id); if(!t) return;
   qs("#tId").value=t.id; qs("#tEvent").value=t.eventId; qs("#tTitle").value=t.title||"";
@@ -2080,57 +2773,117 @@ qs("#btnSaveTask")?.addEventListener("click",()=>{
 qs("#btnResetTask")?.addEventListener("click", resetTaskForm);
 
 /* ---------- Vendors ---------- */
-function renderVendors(){
-  const tbody=qs("#tblVendors tbody"); if(!tbody) return; tbody.innerHTML="";
+function renderVendors(graph=state.graph){
+  const tbody=qs('#tblVendors tbody'); if(!tbody) return; tbody.innerHTML='';
   const frag=fragment();
-  const list=store.data.vendors.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const eventMap=graph?.eventById || new Map((store.data.events||[]).map(e=>[e.id,e]));
+  const insightMap=graph?.vendorInsights;
+  const list=store.data.vendors.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   list.forEach(v=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${v.name||""}</td><td>${v.company||""}</td><td>${v.role||""}</td><td>${v.email||""}</td><td>${v.phone||""}</td><td><span class="status">${v.contract||"—"}</span></td><td><span class="status ${v.payment==='Overdue'?'s-overdue':v.payment==='Paid'?'s-completed':''}">${v.payment||"—"}</span></td><td>${v.docs||""}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editVendor('${v.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delVendor('${v.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
+    const ids=Array.isArray(v.events)?v.events:[];
+    const titles=ids.map(id=>eventMap.get(id)?.title).filter(Boolean);
+    const linked=titles.length?titles.join(' • '):'—';
+    const insight=typeof insightMap?.get==='function' ? insightMap.get(v.id) : null;
+    const stats=insight?.stats||{};
+    const chips=[];
+    if(typeof stats.eventCount==='number' && stats.eventCount>=0){
+      chips.push(`${stats.eventCount} event${stats.eventCount===1?'':'s'}`);
+    }
+    if((stats.tasksOutstanding||0)>0){
+      chips.push(`${stats.tasksOutstanding} open task${stats.tasksOutstanding===1?'':'s'}`);
+    }
+    if((stats.tasksOverdue||0)>0){
+      chips.push(`${stats.tasksOverdue} overdue`);
+    }
+    if((stats.tasksTotal||0)>0){
+      chips.push(`${stats.tasksCompletion||0}% complete`);
+    }
+    if(stats.budgetVariance){
+      chips.push(`${stats.budgetVariance>0?'Over':'Under'} by ${fmtMoney(Math.abs(stats.budgetVariance))}`);
+    }
+    const chipsMarkup=chips.length?`<div class="insight-chips">${chips.map(c=>`<span class="insight-chip">${c}</span>`).join('')}</div>`:'';
+    const statuses=(stats.statuses||[]).filter(Boolean);
+    const metaItems=[];
+    if(statuses.length){
+      metaItems.push(`<div class="insight-meta">Status: ${statuses.join(' • ')}</div>`);
+    }
+    const next=stats.nextMilestone;
+    if(next){
+      metaItems.push(`<div class="insight-meta">Next: ${next.title||'Milestone'} • ${fmtDateTime(next.start)||'Date TBD'}${next.eventTitle?` (${next.eventTitle})`:''}</div>`);
+    }else if(stats.eventCount){
+      metaItems.push('<div class="insight-meta">No upcoming milestones recorded</div>');
+    }
+    if(insight?.overdueDetails?.length){
+      const first=insight.overdueDetails[0];
+      const taskTitle=first.task?.title||'Task';
+      const eventTitle=first.eventTitle?` (${first.eventTitle})`:'';
+      metaItems.push(`<div class="insight-meta">Overdue: ${taskTitle}${eventTitle}</div>`);
+    }
+    const metaMarkup=metaItems.join('');
+    const engagementHtml=insight
+      ? `<div class="vendor-engagement">${chipsMarkup || ''}${metaMarkup || (!chipsMarkup ? '<span class="insight-empty">Link tasks, budgets, or timelines to surface progress.</span>' : '')}</div>`
+      : '<span class="insight-empty">Not linked to scoped events</span>';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${v.name||''}</td><td>${v.company||''}</td><td>${v.role||''}</td><td>${linked}</td><td>${v.email||''}</td><td>${v.phone||''}</td><td><span class="status">${v.contract||'—'}</span></td><td><span class="status ${v.payment==='Overdue'?'s-overdue':v.payment==='Paid'?'s-completed':''}">${v.payment||'—'}</span></td><td>${v.docs||''}</td><td>${engagementHtml}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editVendor('${v.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delVendor('${v.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
 }
-function resetVendorForm(){ ["vId","vName","vCompany","vRole","vEmail","vPhone","vDocs"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""}); if(qs("#vContract")) qs("#vContract").value="Draft"; if(qs("#vPayment")) qs("#vPayment").value="Due" }
+function resetVendorForm(){ ['vId','vName','vCompany','vRole','vEmail','vPhone','vDocs'].forEach(id=>{const el=qs('#'+id); if(el) el.value=''}); if(qs('#vContract')) qs('#vContract').value='Draft'; if(qs('#vPayment')) qs('#vPayment').value='Due'; const multi=qs('#vEvents'); if(multi) Array.from(multi.options).forEach(opt=>opt.selected=false); fillEventSelectors() }
 function editVendor(id){
   const v=store.data.vendors.find(x=>x.id===id); if(!v) return;
-  qs("#vId").value=v.id; qs("#vName").value=v.name||""; qs("#vCompany").value=v.company||""; qs("#vRole").value=v.role||"";
-  qs("#vEmail").value=v.email||""; qs("#vPhone").value=v.phone||""; qs("#vContract").value=v.contract||"Draft"; qs("#vPayment").value=v.payment||"Due"; qs("#vDocs").value=v.docs||"";
-  navigate("#/vendors");
+  qs('#vId').value=v.id; qs('#vName').value=v.name||''; qs('#vCompany').value=v.company||''; qs('#vRole').value=v.role||'';
+  qs('#vEmail').value=v.email||''; qs('#vPhone').value=v.phone||''; qs('#vContract').value=v.contract||'Draft'; qs('#vPayment').value=v.payment||'Due'; qs('#vDocs').value=v.docs||'';
+  const multi=qs('#vEvents'); if(multi){ const sel=new Set((v.events||[]).filter(Boolean)); Array.from(multi.options).forEach(opt=>{ opt.selected=sel.has(opt.value); }); }
+  navigate('#/vendors');
 }
-function delVendor(id){ if(confirm("Delete this vendor?")){ store.remove("vendors",id); renderAll("vendors") } }
-qs("#btnAddVendor")?.addEventListener("click",()=>{ resetVendorForm(); navigate("#/vendors"); qs("#vName")?.focus() });
-qs("#btnSaveVendor")?.addEventListener("click",()=>{
-  const v={ id:(qs("#vId")?.value||"").trim()||null, name:qs("#vName")?.value.trim(), company:qs("#vCompany")?.value.trim(), role:qs("#vRole")?.value.trim(), email:qs("#vEmail")?.value.trim(), phone:qs("#vPhone")?.value.trim(), contract:qs("#vContract")?.value, payment:qs("#vPayment")?.value, docs:qs("#vDocs")?.value.trim() };
-  if(!v.name){ alert("Vendor name is required"); return }
-  store.upsert("vendors",v); resetVendorForm(); renderAll("vendors");
+function delVendor(id){ if(confirm('Delete this vendor?')){ store.remove('vendors',id); renderAll('vendors') } }
+qs('#btnAddVendor')?.addEventListener('click',()=>{ resetVendorForm(); navigate('#/vendors'); qs('#vName')?.focus() });
+qs('#btnSaveVendor')?.addEventListener('click',()=>{
+  const multi=qs('#vEvents');
+  const events=multi?Array.from(multi.selectedOptions).map(opt=>opt.value).filter(Boolean):[];
+  const v={ id:(qs('#vId')?.value||'').trim()||null, name:qs('#vName')?.value.trim(), company:qs('#vCompany')?.value.trim(), role:qs('#vRole')?.value.trim(), email:qs('#vEmail')?.value.trim(), phone:qs('#vPhone')?.value.trim(), contract:qs('#vContract')?.value, payment:qs('#vPayment')?.value, docs:qs('#vDocs')?.value.trim(), events };
+  if(!v.name){ alert('Vendor name is required'); return }
+  store.upsert('vendors',v); resetVendorForm(); renderAll('vendors');
 });
-qs("#btnResetVendor")?.addEventListener("click", resetVendorForm);
-qs("#btnPrintVendors")?.addEventListener("click", ()=>window.print());
+qs('#btnResetVendor')?.addEventListener('click', resetVendorForm);
+qs('#btnPrintVendors')?.addEventListener('click', ()=>window.print());
 
 /* ---------- Budget ---------- */
-function renderBudget(){
-  const tbody=qs("#tblBudget tbody"); if(!tbody) return; tbody.innerHTML="";
+function renderBudget(graph=state.graph){
+  const tbody=qs('#tblBudget tbody'); if(!tbody) return; tbody.innerHTML='';
   let sumF=0,sumA=0;
-  const fIds=new Set(filteredEvents().map(e=>e.id));
-  const rows=store.data.budget.filter(b=>!b.eventId || fIds.has(b.eventId));
+  const allowed=graph?.scopedIds || new Set(filteredEvents().map(e=>e.id));
+  const rows=store.data.budget.filter(b=>!b.eventId || allowed.has(b.eventId));
+  const eventMap=graph?.eventById || new Map((store.data.events||[]).map(e=>[e.id,e]));
   const frag=fragment();
   rows.forEach(b=>{
-    const ev=store.data.events.find(e=>e.id===b.eventId);
-    const forecast = b.forecast || (toNumber(b.qty)*toNumber(b.unit)*(1+toNumber(b.tax)/100));
-    const actual = toNumber(b.actual);
+    const ev=eventMap.get(b.eventId);
+    const forecast=b.forecast || (toNumber(b.qty)*toNumber(b.unit)*(1+toNumber(b.tax)/100));
+    const actual=toNumber(b.actual);
     sumF+=forecast; sumA+=actual;
-    const variance = actual - forecast;
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${ev?ev.title:"—"}</td><td>${b.cat||""}</td><td>${b.item||""}</td><td>${b.qty??1}</td><td>${fmtMoney(b.unit||0)}</td><td>${toNumber(b.tax||0).toFixed(2)}</td><td>${fmtMoney(forecast)}</td><td>${fmtMoney(actual)}</td><td>${fmtMoney(variance)}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editLine('${b.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delLine('${b.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
+    const variance=actual-forecast;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${ev?ev.title:'—'}</td><td>${b.cat||''}</td><td>${b.item||''}</td><td>${b.qty??1}</td><td>${fmtMoney(b.unit||0)}</td><td>${toNumber(b.tax||0).toFixed(2)}</td><td>${fmtMoney(forecast)}</td><td>${fmtMoney(actual)}</td><td>${fmtMoney(variance)}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editLine('${b.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delLine('${b.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
-  qs("#sumForecast").textContent=fmtMoney(sumF);
-  qs("#sumActual").textContent=fmtMoney(sumA);
-  qs("#sumVariance").textContent=fmtMoney(sumA-sumF);
+  qs('#sumForecast').textContent=fmtMoney(sumF);
+  qs('#sumActual').textContent=fmtMoney(sumA);
+  qs('#sumVariance').textContent=fmtMoney(sumA-sumF);
 }
-function resetLineForm(){ ["bId","bCat","bItem","bNotes"].forEach(id=>{const el=qs("#"+id); if(el) el.value=""}); ["bQty","bUnit","bTax","bForecast","bActual"].forEach(id=>{const el=qs("#"+id); if(el) el.value="0"}); fillEventSelectors() }
+
+function resetLineForm(){
+  ["bId","bCat","bItem","bNotes"].forEach(id=>{
+    const el=qs("#"+id);
+    if(el) el.value="";
+  });
+  ["bQty","bUnit","bTax","bForecast","bActual"].forEach(id=>{
+    const el=qs("#"+id);
+    if(el) el.value="0";
+  });
+  fillEventSelectors();
+}
 function editLine(id){
   const b=store.data.budget.find(x=>x.id===id); if(!b) return;
   qs("#bId").value=b.id; qs("#bEvent").value=b.eventId||""; qs("#bCat").value=b.cat||""; qs("#bItem").value=b.item||"";
@@ -2164,21 +2917,31 @@ qs("#btnExportCSV")?.addEventListener("click",()=>{
 });
 
 /* ---------- Timeline ---------- */
-function renderTimeline(){
-  const tbody=qs("#tblTimeline tbody"); if(!tbody) return; tbody.innerHTML="";
-  const fIds=new Set(filteredEvents().map(e=>e.id));
-  const rows=store.data.timeline.filter(s=>fIds.has(s.eventId));
-  rows.sort((a,b)=> (a.start||"").localeCompare(b.start||""));
+function renderTimeline(graph=state.graph){
+  const tbody=qs('#tblTimeline tbody'); if(!tbody) return; tbody.innerHTML='';
+  const rows=[];
+  if(graph){
+    graph.map.forEach(ctx=>{
+      ctx.timeline.forEach(slot=>rows.push({slot,event:ctx.event}));
+    });
+  }else{
+    const fIds=new Set(filteredEvents().map(e=>e.id));
+    store.data.timeline.filter(s=>fIds.has(s.eventId)).forEach(slot=>{
+      const ev=store.data.events.find(e=>e.id===slot.eventId) || null;
+      rows.push({slot,event:ev});
+    });
+  }
+  rows.sort((a,b)=>(a.slot.start||'').localeCompare(b.slot.start||''));
   const frag=fragment();
-  rows.forEach(s=>{
-    const ev=store.data.events.find(e=>e.id===s.eventId);
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${ev?ev.title:""}</td><td>${s.title||""}</td><td>${s.lane||""}</td><td>${fmtDateTime(s.start)||""}</td><td>${fmtDateTime(s.end)||""}</td><td>${s.notes||""}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editSlot('${s.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delSlot('${s.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
+  rows.forEach(({slot:s,event:ev})=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${ev?ev.title:''}</td><td>${s.title||''}</td><td>${s.lane||''}</td><td>${fmtDateTime(s.start)||''}</td><td>${fmtDateTime(s.end)||''}</td><td>${s.notes||''}</td><td class="row no-print"><button class="ghost" title="Edit" onclick="editSlot('${s.id}')"><svg class="icon"><use href="#ic-edit"></use></svg></button><button class="danger" title="Delete" onclick="delSlot('${s.id}')"><svg class="icon"><use href="#ic-trash"></use></svg></button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
   detectConflicts();
 }
+
 function detectConflicts(){
   const msg=qs("#slotConflicts"); if(!msg) return;
   const byLane={};
@@ -2347,60 +3110,63 @@ function clearMarkers(){
   _poiMarkers.forEach(m=>_map.removeLayer(m)); _poiMarkers=[];
 }
 
-function renderMap(){
+function renderMap(graph=state.graph){
   initMap(); if(!_map) return;
 
   try { _map.invalidateSize(); } catch(_) {}
 
   clearMarkers();
 
- const evs = filteredEvents()
-  .filter(e => e.status !== "Completed")
-  .filter(e => Number.isFinite(e?.lat) && Number.isFinite(e?.lon));
-  evs.forEach(e=>{
+  const events=(graph?.events||filteredEvents())
+    .filter(e => e.status !== 'Completed')
+    .filter(e => Number.isFinite(e?.lat) && Number.isFinite(e?.lon));
+  events.forEach(e=>{
     const m = L.marker([e.lat, e.lon]).addTo(_map);
-    m.bindPopup(`<b>${e.title}</b><br>${e.eventType} — ${fmtDate(e.eventDate)}<br>${e.address||""}<br>Status: ${e.status}`);
+    m.bindPopup(`<b>${e.title}</b><br>${e.eventType} — ${fmtDate(e.eventDate)}<br>${e.address||''}<br>Status: ${e.status}`);
     _markers.push(m);
   });
 
-  // POIs
-  (store.data.pois||[]).forEach(p=>{
-    if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)) return;
-    const addressLine = p.address ? `${p.address}<br>` : "";
-    const m = L.circleMarker([p.lat,p.lon],{radius:7,weight:2}).addTo(_map)
-      .bindPopup(`<b>${p.label}</b><br>${addressLine}Type: ${p.type||"Other"}`);
-    _poiMarkers.push(m);
-  });
+  const allowedIds=new Set((graph?.events||filteredEvents()).map(e=>e.id));
+  (store.data.pois||[])
+    .filter(p=>!p.eventId || allowedIds.has(p.eventId))
+    .forEach(p=>{
+      if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)) return;
+      const addressLine = p.address ? `${p.address}<br>` : '';
+      const link = p.eventId && allowedIds.has(p.eventId) ? (graph?.eventById?.get(p.eventId)?.title || '') : '';
+      const suffix = link ? `<br>Event: ${link}` : '';
+      const m = L.circleMarker([p.lat,p.lon],{radius:7,weight:2}).addTo(_map)
+        .bindPopup(`<b>${p.label}</b><br>${addressLine}Type: ${p.type||'Other'}${suffix}`);
+      _poiMarkers.push(m);
+    });
 
   if (_markers.length || _poiMarkers.length) {
     const group = L.featureGroup([..._markers, ..._poiMarkers]);
     _map.fitBounds(group.getBounds().pad(0.2));
   }
 
-  // Non-destructive empty-state overlay
-  const container = qs("#leafletMap");
+  const container = qs('#leafletMap');
   if (!container) return;
-  let overlay = container.querySelector(".map-empty");
+  let overlay = container.querySelector('.map-empty');
   if (!_markers.length && !_poiMarkers.length) {
     if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.className = "map-empty";
-      overlay.style.position = "absolute";
-      overlay.style.inset = "0";
-      overlay.style.display = "flex";
-      overlay.style.alignItems = "center";
-      overlay.style.justifyContent = "center";
-      overlay.style.pointerEvents = "none";
-      overlay.style.fontSize = "14px";
-      overlay.style.padding = "12px";
-      overlay.style.background = "transparent";
-      overlay.style.color = "var(--muted)";
+      overlay = document.createElement('div');
+      overlay.className = 'map-empty';
+      overlay.style.position = 'absolute';
+      overlay.style.inset = '0';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.pointerEvents = 'none';
+      overlay.style.fontSize = '14px';
+      overlay.style.padding = '12px';
+      overlay.style.background = 'transparent';
+      overlay.style.color = 'var(--muted)';
       container.appendChild(overlay);
     }
-    overlay.textContent = "No locations match current filters. Try clearing filters.";
-    overlay.style.visibility = "visible";
+    overlay.textContent = 'No locations match current filters. Try clearing filters.';
+    overlay.style.visibility = 'visible';
   } else if (overlay) {
-    overlay.style.visibility = "hidden";
+    overlay.style.visibility = 'hidden';
   }
 }
 
@@ -2408,6 +3174,7 @@ function renderMap(){
 function resetPOIForm(){
   ["pId","pLabel","pLat","pLon","pAddress"].forEach(id=>{ const el=qs(`#${id}`); if(el) el.value=""; });
   const type=qs("#pType"); if(type) type.selectedIndex=0;
+  const eventSel=qs("#pEvent"); if(eventSel) eventSel.value="";
   state.poiAddrPick=null;
   if(poiAddrAuto && typeof poiAddrAuto.reset==="function"){ poiAddrAuto.reset(); }
 }
@@ -2462,6 +3229,9 @@ qs("#btnAddPOI")?.addEventListener("click", async ()=>{
     return;
   }
 
+  const eventSel=qs("#pEvent");
+  const eventId=eventSel?.value||"";
+
   if(!store.data.pois) store.data.pois=[];
   store.data.pois.push({
     id:uid("poi"),
@@ -2469,7 +3239,8 @@ qs("#btnAddPOI")?.addEventListener("click", async ()=>{
     type,
     lat:finalLat,
     lon:finalLon,
-    address: pick ? pick.display_name : (address || "")
+    address: pick ? pick.display_name : (address || ""),
+    eventId:eventId||null
   });
   store.save();
   renderMap();
