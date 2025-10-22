@@ -289,6 +289,17 @@ Perf notes:
     #timeline .slot-editor-card{align-self:stretch}
     #timeline .slots-card{display:flex;flex-direction:column}
     #timeline .slots-card .table-wrap{flex:1}
+    #analysis{display:flex;flex-direction:column;gap:16px}
+    #analysis .analysis-header{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+    #analysis .analysis-header h3{margin:0;font-size:18px;color:var(--text);font-weight:800}
+    #analysis .analysis-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    #analysis .analysis-metric{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+    #analysis .analysis-metric h4{margin:0;font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+    #analysis .analysis-value{font-size:34px;font-weight:900;color:var(--accent-2)}
+    #analysis .analysis-sub{font-size:13px;color:var(--muted);line-height:1.4}
+    #analysis .seasonal-note{margin:0;color:var(--muted);font-size:12px}
+    #analysis table td:first-child{font-weight:600}
+    [data-theme="dark"] #analysis .analysis-metric{background:var(--card);border-color:var(--border)}
     #events form.grid-4,
     #vendors form.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
     #budget form.grid-5{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
@@ -335,6 +346,28 @@ Perf notes:
     .autocomplete-item:hover,.autocomplete-item.active{background:var(--row-hover)}
     [data-theme="dark"] .autocomplete-item:hover,[data-theme="dark"] .autocomplete-item.active{background:var(--row-hover-dark)}
     .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    #dashboard .calendar-card{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+    .calendar-head h3{margin:0;font-size:16px;color:var(--text);font-weight:700}
+    .calendar-month{font-weight:700;color:var(--accent-2)}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+    .calendar-dayname{font-size:11px;text-transform:uppercase;letter-spacing:.35px;text-align:center;color:var(--muted);padding:4px 0}
+    .calendar-cell{min-height:92px;border:1px solid var(--border);border-radius:12px;padding:6px;background:var(--card);display:flex;flex-direction:column;gap:6px}
+    .calendar-cell.empty{background:transparent;border-style:dashed;opacity:.4}
+    .calendar-cell.today{border-color:var(--accent-2);box-shadow:0 0 0 2px var(--focus)}
+    .calendar-date{font-size:13px;font-weight:700;color:var(--text)}
+    .calendar-events{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+    .calendar-event{font-size:12px;display:flex;align-items:flex-start;gap:6px;line-height:1.3}
+    .calendar-event .dot{width:8px;height:8px;border-radius:999px;flex-shrink:0;margin-top:4px;background:var(--accent)}
+    .calendar-event .dot.s-planning{background:#7c3aed}
+    .calendar-event .dot.s-executing{background:#3730a3}
+    .calendar-event .dot.s-completed{background:#059669}
+    .calendar-event .dot.s-overdue{background:#dc2626}
+    .calendar-event-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    [data-theme="dark"] .calendar-cell{background:var(--card);border-color:var(--border)}
+    [data-theme="dark"] .calendar-event .dot.s-planning{background:#c4b5fd}
+    [data-theme="dark"] .calendar-event .dot.s-executing{background:#a5b4fc}
+    [data-theme="dark"] .calendar-event .dot.s-completed{background:#34d399}
+    [data-theme="dark"] .calendar-event .dot.s-overdue{background:#f87171}
     .col{background:var(--card);border:1px dashed var(--border);border-radius:12px;padding:10px;min-height:220px}
     .ticket{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px;margin:6px 0;box-shadow:0 1px 0 #00000010}
     [data-theme="dark"] .ticket{background:var(--card);border-color:var(--border)}
@@ -474,6 +507,7 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
 </div>
   <nav role="navigation" aria-label="Primary">
     <button class="tab-btn" data-testid="nav-dashboard" data-route="#/dashboard" aria-current="page">Dashboard</button>
+    <button class="tab-btn" data-testid="nav-analysis" data-route="#/analysis">Analysis</button>
     <button class="tab-btn" data-testid="nav-events" data-route="#/events">Events</button>
     <button class="tab-btn" data-testid="nav-post" data-route="#/post">Post-Event</button>
     <button class="tab-btn" data-testid="nav-timeline" data-route="#/timeline">Timeline</button>
@@ -546,6 +580,56 @@ header .scope{display:inline-flex; align-items:center; gap:8px}
         </button>
       </div>
       <div id="kpiDetailBody" class="kpi-detail-body"></div>
+    </div>
+    <div class="card calendar-card" role="region" aria-label="Calendar overview">
+      <div class="row calendar-head">
+        <h3><svg class="icon" aria-hidden="true"><use href="#ic-calendar"></use></svg> Monthly Calendar</h3>
+        <div class="spacer"></div>
+        <div class="calendar-month" id="dashboardCalendarMonth"></div>
+      </div>
+      <div class="calendar-grid" id="dashboardCalendarGrid" role="grid" aria-labelledby="dashboardCalendarMonth"></div>
+    </div>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section id="analysis" class="tab card" role="region" aria-labelledby="h-analysis" hidden>
+    <div class="analysis-header">
+      <h3 id="h-analysis">Analysis &amp; Forecast</h3>
+      <p class="muted">Seasonal projection blends historical patterns with your upcoming schedule.</p>
+    </div>
+    <div class="analysis-metrics" aria-live="polite">
+      <div class="analysis-metric" role="group" aria-labelledby="analysisProjectedLabel">
+        <h4 id="analysisProjectedLabel">Projected Events Next Month</h4>
+        <div class="analysis-value" id="analysisProjectedValue">0</div>
+        <div class="analysis-sub" id="analysisProjectedSummary">Add dated events to compute a projection.</div>
+      </div>
+      <div class="analysis-metric" role="group" aria-labelledby="analysisSeasonalLabel">
+        <h4 id="analysisSeasonalLabel">Seasonal Baseline</h4>
+        <div class="analysis-value" id="analysisSeasonalValue">0.0</div>
+        <div class="analysis-sub" id="analysisSeasonalSummary">No historical data yet.</div>
+      </div>
+      <div class="analysis-metric" role="group" aria-labelledby="analysisScheduledLabel">
+        <h4 id="analysisScheduledLabel">Scheduled Next Month</h4>
+        <div class="analysis-value" id="analysisScheduledValue">0</div>
+        <div class="analysis-sub" id="analysisScheduledSummary">No events scheduled.</div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <p class="seasonal-note">Chronological list respects the current scope and filters.</p>
+    <div class="table-wrap" role="region" aria-label="Events in chronological order">
+      <table id="analysisEventsTable">
+        <thead>
+          <tr>
+            <th scope="col">Event</th>
+            <th scope="col">Date</th>
+            <th scope="col">Month</th>
+            <th scope="col">Type</th>
+            <th scope="col">Status</th>
+            <th scope="col">Owner</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 
@@ -1165,7 +1249,7 @@ const state={
 let eventAddrAuto=null;
 let poiAddrAuto=null;
 /* ---------- Router (hash) ---------- */
-const ROUTES=["#/dashboard","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
+const ROUTES=["#/dashboard","#/analysis","#/events","#/timeline","#/vendors","#/budget","#/tasks","#/map","#/settings","#/post"];
 function navigate(hash){
   const h=ROUTES.includes(hash)?hash:"#/dashboard";
   if(location.hash!==h) location.hash=h;
@@ -1616,6 +1700,261 @@ function renderDashTasks(){
   tbody.appendChild(frag);
 }
 
+function renderDashboardCalendar(){
+  const grid=qs("#dashboardCalendarGrid");
+  const label=qs("#dashboardCalendarMonth");
+  if(!grid || !label) return;
+
+  const today=new Date();
+  const monthStart=new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthEnd=new Date(today.getFullYear(), today.getMonth()+1, 0);
+  const monthLabel=monthStart.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  label.textContent=monthLabel;
+
+  const eventsMap=new Map();
+  filteredEvents().forEach(ev=>{
+    if(!ev.eventDate) return;
+    const d=parseYMD(ev.eventDate);
+    if(!d) return;
+    if(d.getFullYear()!==monthStart.getFullYear() || d.getMonth()!==monthStart.getMonth()) return;
+    const key=ev.eventDate;
+    if(!eventsMap.has(key)) eventsMap.set(key,[]);
+    eventsMap.get(key).push(ev);
+  });
+
+  grid.innerHTML="";
+  const dayNames=[];
+  for(let i=0;i<7;i++){
+    const base=new Date(2021,0,3+i); // 2021-01-03 is Sunday
+    dayNames.push(base.toLocaleDateString(undefined,{weekday:'short'}));
+  }
+  dayNames.forEach(name=>{
+    const header=document.createElement("div");
+    header.className="calendar-dayname";
+    header.setAttribute("role","columnheader");
+    header.textContent=name;
+    grid.appendChild(header);
+  });
+
+  const leading=monthStart.getDay();
+  for(let i=0;i<leading;i++){
+    const emptyCell=document.createElement("div");
+    emptyCell.className="calendar-cell empty";
+    emptyCell.setAttribute("role","gridcell");
+    emptyCell.setAttribute("aria-disabled","true");
+    grid.appendChild(emptyCell);
+  }
+
+  const totalDays=monthEnd.getDate();
+  for(let day=1; day<=totalDays; day++){
+    const cell=document.createElement("div");
+    cell.className="calendar-cell";
+    cell.setAttribute("role","gridcell");
+    const key=`${monthStart.getFullYear()}-${String(monthStart.getMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    const isToday=today.getFullYear()===monthStart.getFullYear() && today.getMonth()===monthStart.getMonth() && today.getDate()===day;
+    if(isToday) cell.classList.add("today");
+
+    const dateLabel=document.createElement("div");
+    dateLabel.className="calendar-date";
+    dateLabel.textContent=String(day);
+    cell.appendChild(dateLabel);
+
+    const eventsForDay=(eventsMap.get(key)||[]).slice().sort((a,b)=> (a.title||"Untitled event").localeCompare(b.title||"Untitled event"));
+    if(eventsForDay.length){
+      const list=document.createElement("ul");
+      list.className="calendar-events";
+      eventsForDay.forEach(ev=>{
+        const item=document.createElement("li");
+        item.className="calendar-event";
+        const status=(ev.status||"").toLowerCase();
+        let statusClass="s-planning";
+        if(status==="completed") statusClass="s-completed";
+        else if(status==="executing"||status==="in progress") statusClass="s-executing";
+        const dot=document.createElement("span");
+        dot.className=`dot ${statusClass}`;
+        item.appendChild(dot);
+        const title=document.createElement("span");
+        title.className="calendar-event-title";
+        title.textContent=ev.title||"Untitled event";
+        item.appendChild(title);
+        list.appendChild(item);
+      });
+      cell.appendChild(list);
+    }
+
+    const ariaParts=[`${monthLabel} ${day}`];
+    ariaParts.push(eventsForDay.length?eventsForDay.map(ev=>ev.title||"Untitled event").join(", "):"No events");
+    cell.setAttribute("aria-label",ariaParts.join(": "));
+    grid.appendChild(cell);
+  }
+
+  const filled=leading+totalDays;
+  const remainder=filled%7;
+  const trailing=remainder?7-remainder:0;
+  for(let i=0;i<trailing;i++){
+    const emptyCell=document.createElement("div");
+    emptyCell.className="calendar-cell empty";
+    emptyCell.setAttribute("role","gridcell");
+    emptyCell.setAttribute("aria-disabled","true");
+    grid.appendChild(emptyCell);
+  }
+}
+
+function renderAnalysis(){
+  const tableBody=qs("#analysisEventsTable tbody");
+  const projectedEl=qs("#analysisProjectedValue");
+  const projectedSummaryEl=qs("#analysisProjectedSummary");
+  const baselineEl=qs("#analysisSeasonalValue");
+  const baselineSummaryEl=qs("#analysisSeasonalSummary");
+  const scheduledEl=qs("#analysisScheduledValue");
+  const scheduledSummaryEl=qs("#analysisScheduledSummary");
+  if(!(tableBody||projectedEl||baselineEl||scheduledEl)) return;
+
+  const events=filteredEvents();
+  const sorted=events.slice().sort((a,b)=>{
+    const da=parseYMD(a.eventDate);
+    const db=parseYMD(b.eventDate);
+    if(!da && !db) return (a.title||"").localeCompare(b.title||"");
+    if(!da) return 1;
+    if(!db) return -1;
+    const diff=da.getTime()-db.getTime();
+    if(diff!==0) return diff;
+    return (a.title||"").localeCompare(b.title||"");
+  });
+
+  if(tableBody){
+    tableBody.innerHTML="";
+    if(sorted.length){
+      const frag=fragment();
+      sorted.forEach(ev=>{
+        const tr=document.createElement("tr");
+        const addCell=value=>{const td=document.createElement("td"); td.textContent=value; return td;};
+        tr.appendChild(addCell(ev.title||"Untitled event"));
+        tr.appendChild(addCell(ev.eventDate?fmtDate(ev.eventDate):"Date TBD"));
+        const dateObj=parseYMD(ev.eventDate);
+        tr.appendChild(addCell(dateObj?dateObj.toLocaleDateString(undefined,{month:'long',year:'numeric'}):"—"));
+        tr.appendChild(addCell(ev.eventType||"—"));
+        const statusTd=document.createElement("td");
+        const status=(ev.status||"").toLowerCase();
+        let statusClass="s-planning";
+        if(status==="completed") statusClass="s-completed";
+        else if(status==="executing"||status==="in progress") statusClass="s-executing";
+        const badge=document.createElement("span");
+        badge.className=`status ${statusClass}`;
+        badge.textContent=ev.status||"Planning";
+        statusTd.appendChild(badge);
+        tr.appendChild(statusTd);
+        tr.appendChild(addCell(ev.owner||"—"));
+        frag.appendChild(tr);
+      });
+      tableBody.appendChild(frag);
+    }else{
+      const tr=document.createElement("tr");
+      const td=document.createElement("td");
+      td.colSpan=6;
+      td.textContent="No events match the current filters.";
+      tr.appendChild(td);
+      tableBody.appendChild(tr);
+    }
+  }
+
+  const today=new Date();
+  const monthStart=new Date(today.getFullYear(), today.getMonth(), 1);
+  const nextMonthStart=new Date(monthStart.getFullYear(), monthStart.getMonth()+1, 1);
+  const nextMonthLabel=nextMonthStart.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const nextMonthName=nextMonthStart.toLocaleDateString(undefined,{month:'long'});
+
+  const eventsWithDates=sorted.filter(ev=>parseYMD(ev.eventDate));
+  const scheduledList=eventsWithDates.filter(ev=>{
+    const d=parseYMD(ev.eventDate);
+    return d && d.getFullYear()===nextMonthStart.getFullYear() && d.getMonth()===nextMonthStart.getMonth();
+  });
+  const scheduledNextMonth=scheduledList.length;
+
+  const historical=eventsWithDates.filter(ev=>{
+    const d=parseYMD(ev.eventDate);
+    return d && d < nextMonthStart;
+  });
+  const yearsSet=new Set();
+  const monthCountByYear=new Map();
+  historical.forEach(ev=>{
+    const d=parseYMD(ev.eventDate);
+    if(!d) return;
+    const year=d.getFullYear();
+    yearsSet.add(year);
+    if(d.getMonth()===nextMonthStart.getMonth()){
+      monthCountByYear.set(year,(monthCountByYear.get(year)||0)+1);
+    }
+  });
+  let seasonalBaseline=0;
+  if(yearsSet.size){
+    const total=Array.from(yearsSet).reduce((sum,year)=>sum+(monthCountByYear.get(year)||0),0);
+    seasonalBaseline=total/yearsSet.size;
+  }else{
+    const monthBuckets={};
+    eventsWithDates.forEach(ev=>{
+      const d=parseYMD(ev.eventDate);
+      if(!d) return;
+      const key=`${d.getFullYear()}-${d.getMonth()}`;
+      monthBuckets[key]=(monthBuckets[key]||0)+1;
+    });
+    const values=Object.values(monthBuckets);
+    if(values.length){
+      seasonalBaseline=values.reduce((a,b)=>a+b,0)/values.length;
+    }
+  }
+
+  const windowMonths=[];
+  for(let offset=-1; offset<=1; offset++){
+    windowMonths.push(new Date(monthStart.getFullYear(), monthStart.getMonth()+offset, 1));
+  }
+  const windowCounts=windowMonths.map(start=>{
+    const y=start.getFullYear();
+    const m=start.getMonth();
+    return eventsWithDates.filter(ev=>{
+      const d=parseYMD(ev.eventDate);
+      return d && d.getFullYear()===y && d.getMonth()===m;
+    }).length;
+  });
+  const recentAvg=windowCounts.length?windowCounts.reduce((a,b)=>a+b,0)/windowCounts.length:0;
+  let trendFactor=seasonalBaseline?recentAvg/seasonalBaseline:1;
+  if(!Number.isFinite(trendFactor) || trendFactor<=0) trendFactor=1;
+  trendFactor=clamp(trendFactor,0.6,1.6);
+
+  const baselineAdjusted=seasonalBaseline*trendFactor;
+  let projected=Math.round((baselineAdjusted*0.55)+(scheduledNextMonth*0.45));
+  if(!Number.isFinite(projected)) projected=0;
+  projected=Math.max(scheduledNextMonth, projected);
+
+  if(projectedEl) projectedEl.textContent=String(projected);
+  if(projectedSummaryEl){
+    const baselineText=Number.isFinite(seasonalBaseline)?seasonalBaseline.toFixed(1):"0.0";
+    const trendPercent=Math.round((trendFactor-1)*100);
+    const trendText=trendPercent===0?"steady":(trendPercent>0?`up ${trendPercent}%`:`down ${Math.abs(trendPercent)}%`);
+    projectedSummaryEl.textContent=`Seasonal baseline ${baselineText} for ${nextMonthName}; ${scheduledNextMonth} scheduled; trend ${trendText}.`;
+  }
+  if(baselineEl) baselineEl.textContent=Number.isFinite(seasonalBaseline)?seasonalBaseline.toFixed(1):"0.0";
+  if(baselineSummaryEl){
+    if(yearsSet.size){
+      baselineSummaryEl.textContent=`Average across ${yearsSet.size} year${yearsSet.size===1?"":"s"} of history for ${nextMonthName}.`;
+    }else if(eventsWithDates.length){
+      baselineSummaryEl.textContent=`Fallback to overall monthly average from ${eventsWithDates.length} dated event${eventsWithDates.length===1?"":"s"}.`;
+    }else{
+      baselineSummaryEl.textContent="Add dated events to build a seasonal profile.";
+    }
+  }
+  if(scheduledEl) scheduledEl.textContent=String(scheduledNextMonth);
+  if(scheduledSummaryEl){
+    if(scheduledList.length){
+      const titles=scheduledList.slice(0,3).map(ev=>ev.title||"Untitled event");
+      const more=scheduledList.length-titles.length;
+      scheduledSummaryEl.textContent=`${titles.join(" • ")}${more>0?` +${more} more`:""}`;
+    }else{
+      scheduledSummaryEl.textContent=`No events scheduled for ${nextMonthLabel} yet.`;
+    }
+  }
+}
+
 /* ---------- Events table & form actions ---------- */
 function renderEventsTable(){
   const list=qs("#eventCards"); if(!list) return; list.innerHTML="";
@@ -2009,6 +2348,8 @@ function renderAll(context){
   fillEventSelectors();
   fillEventScope();
   renderKPIs();
+  renderDashboardCalendar();
+  renderAnalysis();
   renderEventsTable();
   renderTasksTable();
   renderKanban();
