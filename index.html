@@ -2326,6 +2326,12 @@ function renderAnalysis(){
   const actualContainer=qs("#analysisActual");
   const forecastContainer=qs("#analysisPredictions");
   if(!(actualContainer && forecastContainer)) return;
+  const inScope=state.currentTab==="dashboard" || state.currentTab==="analysis";
+  if(!inScope){
+    actualContainer.innerHTML="";
+    forecastContainer.innerHTML="";
+    return;
+  }
   actualContainer.innerHTML="";
   forecastContainer.innerHTML="";
 
