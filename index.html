@@ -2326,6 +2326,28 @@ function renderAnalysis(){
   const actualContainer=qs("#analysisActual");
   const forecastContainer=qs("#analysisPredictions");
   if(!(actualContainer && forecastContainer)) return;
+  const actualCard=actualContainer.closest(".analysis-card");
+  const forecastCard=forecastContainer.closest(".analysis-card");
+  const toggleCards=show=>{
+    [actualCard,forecastCard].forEach(card=>{
+      if(!card) return;
+      if(show){
+        card.removeAttribute("hidden");
+        card.removeAttribute("aria-hidden");
+      }else{
+        card.setAttribute("hidden","true");
+        card.setAttribute("aria-hidden","true");
+      }
+    });
+  };
+  const inScope=state.currentTab==="dashboard" || state.currentTab==="analysis";
+  if(!inScope){
+    toggleCards(false);
+    actualContainer.innerHTML="";
+    forecastContainer.innerHTML="";
+    return;
+  }
+  toggleCards(true);
   actualContainer.innerHTML="";
   forecastContainer.innerHTML="";
 
